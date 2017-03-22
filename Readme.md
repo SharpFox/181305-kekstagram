@@ -1,7 +1,7 @@
 # Личный проект «Кекстаграм» [![Build status][travis-image]][travis-url]
 
 * Студент: [Роман Вишневский](https://up.htmlacademy.ru/javascript/9/user/181305).
-* Наставник: `Неизвестно`.
+* Наставник: `Антонов Игорь`.
 
 ---
 
