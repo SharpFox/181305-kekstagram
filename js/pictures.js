@@ -11,225 +11,189 @@ var PHOTO_COMMENTS = [
 /**
  * Возвращает случайное значение согласно заданному диапазону и округлению.
  *
- * @param {number} min
- * @param {number} max
- * @param {number} coffRounding
+ * @param {number} lowerLimit
+ * @param {number} upperLimit
+ * @param {number} roundingRatio
  * @return {number}
  */
-var getRandomNumber = function (min, max, coffRounding) {
-  var rand = Math.random() * (max - min) + min;
-  return parseFloat(rand.toFixed(coffRounding));
+var getRandomNumber = function (lowerLimit, upperLimit, roundingRatio) {
+  var randomNumber = Math.random() * (upperLimit - lowerLimit) + lowerLimit;
+  return parseFloat(randomNumber.toFixed(roundingRatio));
 };
 
 /**
- * Возвращает массив адресов к фотографиям.
+ * Возвращает массив, содержащий адреса фотографий.
  *
  * @param {string} path
  * @param {string} extension
- * @param {number} startNumber
- * @param {number} finishNumber
+ * @param {number} photosCount
  * @return {array}
  */
-var getUrlPhoto = function (path, extension, startNumber, finishNumber) {
+var getArrayOfPhotosUrls = function (path, extension, photosCount) {
 
-  var arrayUrlPhoto = [];
+  var arrayOfPhotosUrls = [];
 
-  for (var i = startNumber; i < finishNumber + 1; i++) {
-    arrayUrlPhoto.push(path + '/' + i + '.' + extension);
+  for (var i = 1; i < photosCount + 1; i++) {
+    arrayOfPhotosUrls.push(path + '/' + i + '.' + extension);
   }
-
-  return arrayUrlPhoto;
+  return arrayOfPhotosUrls;
 };
 
 /**
- * Возвращает массив случайного кол-ва лайков для каждой фотографии.
+ * Возвращает массив, содержащий случайное кол-во лайков для каждой фотографии.
  *
- * @param {number} finishNumber
- * @param {number} minRandomNumber
- * @param {number} maxRandonNumber
+ * @param {number} lowerLimitOfRandomNumber
+ * @param {number} upperLimitOfRandomNumber
+ * @param {number} photosCount
  * @return {array}
  */
-var getLikesPhoto = function (finishNumber, minRandomNumber, maxRandonNumber) {
+var getArrayOfPhotosLikes = function (lowerLimitOfRandomNumber, upperLimitOfRandomNumber, photosCount) {
 
-  var arrayLikesPhoto = [];
+  var arrayOfPhotosLikes = [];
+  var roundingRatio = 0;
 
-  for (var i = 0; i < finishNumber; i++) {
-    arrayLikesPhoto.push(getRandomNumber(minRandomNumber, maxRandonNumber, 0));
+  for (var i = 0; i < photosCount; i++) {
+    arrayOfPhotosLikes.push(getRandomNumber(lowerLimitOfRandomNumber, upperLimitOfRandomNumber, roundingRatio));
   }
 
-  return arrayLikesPhoto;
+  return arrayOfPhotosLikes;
 };
 
 /**
- * Возвращает массив случайных комментариев.
+ * Возвращает массив, содержащий случайное кол-во комментариев для каждой фотографии.
  *
- * @param {number} finishNumber
- * @param {array} commentsPhoto
+ * @param {array} arrayOfConstantsPhotosComments
+ * @param {number} photosCount
  * @return {array}
  */
-var getPhotoComments = function (finishNumber, commentsPhoto) {
+var getArrayOfPhotosComments = function (arrayOfConstantsPhotosComments, photosCount) {
 
-  var arrayCommentsPhoto = [];
-  var minRandomNumber = 1;
+  var arrayOfPhotosComments = [];
+  var roundingRatio = 0;
+  var lowerLimitOfRandomNumber = 1;
+  var upperLimitOfRandomNumber = arrayOfConstantsPhotosComments.length;
 
-  for (var i = 0; i < finishNumber; i++) {
+  for (var i = 0; i < photosCount; i++) {
 
-    var randNumberComments = getRandomNumber(1, 2);
-    var randNumberFirstComment = getRandomNumber(minRandomNumber, commentsPhoto.length);
-    var textComment = commentsPhoto[randNumberFirstComment - 1];
+    var commentsCount = getRandomNumber(1, 2);
+    var firstCommentItem = getRandomNumber(lowerLimitOfRandomNumber, upperLimitOfRandomNumber, roundingRatio);
+    var commentText = arrayOfConstantsPhotosComments[firstCommentItem - 1];
 
-    if (randNumberComments === 2) {
+    if (commentsCount === 2) {
 
       do {
-        var randNumberSecondComment = getRandomNumber(minRandomNumber, commentsPhoto.length);
-      } while (randNumberSecondComment === randNumberFirstComment);
+        var secondCommentItem = getRandomNumber(lowerLimitOfRandomNumber, upperLimitOfRandomNumber);
+      } while (secondCommentItem === firstCommentItem);
 
-      textComment += '\n' + commentsPhoto[randNumberSecondComment - 1];
+      commentText += '\n' + arrayOfConstantsPhotosComments[secondCommentItem - 1];
     }
-    arrayCommentsPhoto.push(textComment);
+    arrayOfPhotosComments.push(commentText);
   }
 
-  return arrayCommentsPhoto;
+  return arrayOfPhotosComments;
+};
+
+/**
+ * Возвращает объект, с заполненными свойствами фотографии.
+ *
+ * @param {string} url
+ * @param {number} likesCount
+ * @param {string} comment
+ * @return {object}
+ */
+var getPhoto = function (url, likesCount, comment) {
+
+  var newObject = {};
+
+  newObject.url = url;
+  newObject.likes = likesCount;
+  newObject.comments = comment;
+
+  return newObject;
 };
 
 /**
  *
- * Возвращает массив JS объектов, каждый из которого включает в себя
- * url фотографии, кол-во лайков и кол-во и текст комментария.
+ * Возвращает массив объектов, каждый из которого включает в себя
+ * url фотографии, кол-во лайков и текст комментария.
  *
- * @param {number} numberObject
- * @param {array} arrayUrlPhoto
- * @param {array} arrayLikesPhoto
- * @param {array} arrayCommentsPhoto
+ * @param {number} photosCount
+ * @param {array} arrayOfPhotosUrls
+ * @param {array} arrayOfPhotosLikes
+ * @param {array} arrayOfPhotosComments
  * @return {array}
  */
-var getObject = function (numberObject, arrayUrlPhoto, arrayLikesPhoto, arrayCommentsPhoto) {
+var getArrayOfPhotos = function (photosCount, arrayOfPhotosUrls, arrayOfPhotosLikes, arrayOfPhotosComments) {
 
-  var arrayJsObject = [];
-  for (var i = 0; i < numberObject; i++) {
-
-    var jsObject = {};
-
-    jsObject.url = arrayUrlPhoto[i];
-    jsObject.likes = arrayLikesPhoto[i];
-    jsObject.comments = arrayCommentsPhoto[i];
-
-    arrayJsObject.push(jsObject);
+  var arrayOfPhotos = [];
+  for (var i = 0; i < photosCount; i++) {
+    arrayOfPhotos.push(getPhoto(arrayOfPhotosUrls[i], arrayOfPhotosLikes[i], arrayOfPhotosComments[i]));
   }
 
-  return arrayJsObject;
+  return arrayOfPhotos;
 };
 
 /**
- * Возвращает наполненный элемент свойством объекта.
+ * Создаёт новую фотографию из шаблона, заполняя её свойства.
  *
- * @param {object} jsObject
- * @param {object} jsObjectProperty
- * @param {object} ElementDOM
- * @param {object} pictureElement
- * @return {object}
+ * @param {array} arrayOfPhotos
  */
-var contentPictureElement = function (jsObject, jsObjectProperty, ElementDOM, pictureElement) {
-  pictureElement.querySelector(ElementDOM).textContent = jsObject[jsObjectProperty];
-  return pictureElement;
+var createPhotos = function (arrayOfPhotos) {
+
+  var similarPictureTemplate = document.querySelector('#picture-template').content;
+  var similarListElement = document.querySelector('.pictures');
+
+  var newPhoto = document.createDocumentFragment();
+
+  for (var i = 0; i < arrayOfPhotos.length; i++) {
+
+    var pictureTemplateItem = similarPictureTemplate.cloneNode(true);
+
+    pictureTemplateItem.querySelector('img').setAttribute('src', arrayOfPhotos[i].url);
+    pictureTemplateItem.querySelector('.picture-likes').textContent = arrayOfPhotos[i].likes;
+    pictureTemplateItem.querySelector('.picture-comments').textContent = arrayOfPhotos[i].comments;
+
+    newPhoto.appendChild(pictureTemplateItem);
+  }
+
+  similarListElement.appendChild(newPhoto);
 };
 
 /**
- * Возвращает наполненный элемент свойством объекта.
+ * Заполняет элемент свойствами.
  *
- * @param {object} jsObject
- * @param {object} jsObjectProperty
- * @param {object} ElementDOM
- * @param {object} pictureElement
- * @return {object}
+ * @param {array} arrayOfPhotos
  */
-var setAttributePictureElement = function (jsObject, jsObjectProperty, ElementDOM, pictureElement) {
-  var imgTag = pictureElement.querySelector('img');
-  imgTag.setAttribute(ElementDOM, jsObject[jsObjectProperty]);
+var fillPhoto = function (arrayOfPhotos) {
 
-  return pictureElement;
-};
+  var galleryOverlayItem = document.body.querySelector('.gallery-overlay');
 
-/**
- * Создаёт фрагмент.
- *
- * @param {array} arrayJsObject
- * @param {array} arrayStringElementDOM
- * @param {array} arrayStringJsObjectProperty
- * @param {object} similarPictureTemplate
- * @param {object} similarListElement
- */
-var createFragment = function (arrayJsObject, arrayStringElementDOM, arrayStringJsObjectProperty, similarPictureTemplate, similarListElement) {
-
-  var fragment = document.createDocumentFragment();
-
-  for (var i = 0; i < arrayJsObject.length; i++) {
-
-    var pictureElement = similarPictureTemplate.cloneNode(true);
-
-    for (var j = 0; j < arrayStringElementDOM.length; j++) {
-      if (arrayStringElementDOM[j].indexOf('.') === -1) {
-        setAttributePictureElement(arrayJsObject[i], arrayStringJsObjectProperty[j], arrayStringElementDOM[j], pictureElement);
-        continue;
-      }
-      contentPictureElement(arrayJsObject[i], arrayStringJsObjectProperty[j], arrayStringElementDOM[j], pictureElement);
-    }
-    fragment.appendChild(pictureElement);
+  if (arrayOfPhotos.length === 0) {
+    return;
   }
-  similarListElement.appendChild(fragment);
-};
 
-var fillExistingElement = function (arrayJsObject, arrayStringElementDOM, arrayStringJsObjectProperty, SelectedExistingElement) {
-
-  for (var i = 0; i < arrayJsObject.length; i++) {
-
-    for (var j = 0; j < arrayStringElementDOM.length; j++) {
-      if (arrayStringElementDOM[j].indexOf('.') === -1) {
-        setAttributePictureElement(arrayJsObject[i], arrayStringJsObjectProperty[j], arrayStringElementDOM[j], SelectedExistingElement);
-        continue;
-      }
-      contentPictureElement(arrayJsObject[i], arrayStringJsObjectProperty[j], arrayStringElementDOM[j], SelectedExistingElement);
-    }
-    break;
-  }
+  galleryOverlayItem.querySelector('img').setAttribute('src', arrayOfPhotos[0].url);
+  galleryOverlayItem.querySelector('.likes-count').textContent = arrayOfPhotos[0].likes;
+  galleryOverlayItem.querySelector('.comments-count').textContent = arrayOfPhotos[0].comments;
 };
 
 var path = 'photos';
 var extension = 'jpg';
-var startNumber = 1;
-var finishNumber = 25;
+var photosCount = 25;
 
-var arrayUrlPhoto = getUrlPhoto(path, extension, startNumber, finishNumber);
+var arrayOfPhotosUrls = getArrayOfPhotosUrls(path, extension, photosCount);
 
-var minRandomNumber = 15;
-var maxRandonNumber = 200;
+var lowerLimitOfRandomNumber = 15;
+var upperLimitOfRandomNumber = 200;
 
-var arrayLikesPhoto = getLikesPhoto(finishNumber, minRandomNumber, maxRandonNumber);
+var arrayOfPhotosLikes = getArrayOfPhotosLikes(lowerLimitOfRandomNumber, upperLimitOfRandomNumber, photosCount);
+var arrayOfPhotosComments = getArrayOfPhotosComments(PHOTO_COMMENTS, photosCount);
 
-var arrayCommentsPhoto = getPhotoComments(finishNumber, PHOTO_COMMENTS);
+var arrayOfPhotos = getArrayOfPhotos(photosCount, arrayOfPhotosUrls, arrayOfPhotosLikes, arrayOfPhotosComments);
 
-var numberObject = 25;
+createPhotos(arrayOfPhotos);
 
-var arrayJsObject = getObject(numberObject, arrayUrlPhoto, arrayLikesPhoto, arrayCommentsPhoto);
+document.body.querySelector('.upload-overlay').classList.add('invisible');
+document.body.querySelector('.gallery-overlay').classList.remove('invisible');
 
-var similarPictureTemplate = document.querySelector('#picture-template').content;
-
-var picturesElement = document.querySelector('.pictures');
-
-var arrayStringElementDOM = ['src', '.picture-likes', '.picture-comments'];
-var arrayStringJsObjectProperty = ['url', 'likes', 'comments'];
-
-createFragment(arrayJsObject, arrayStringElementDOM, arrayStringJsObjectProperty, similarPictureTemplate, picturesElement);
-
-var divTag = document.body.querySelector('.upload-overlay');
-divTag.classList.add('invisible');
-
-var galleryOverlayElement = document.body.querySelector('.gallery-overlay');
-galleryOverlayElement.classList.remove('invisible');
-
-arrayStringElementDOM.length = 0;
-arrayStringElementDOM = ['src', '.likes-count', '.comments-count'];
-arrayStringJsObjectProperty.length = 0;
-arrayStringJsObjectProperty = ['url', 'likes', 'comments'];
-
-fillExistingElement(arrayJsObject, arrayStringElementDOM, arrayStringJsObjectProperty, galleryOverlayElement);
+fillPhoto(arrayOfPhotos);
