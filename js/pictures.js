@@ -140,21 +140,20 @@ var getArrayOfPhotos = function (arrayOfPhotosUrls, arrayOfPhotosLikes, arrayOfP
  * Создаёт новую фотографию из шаблона, заполняя её свойства.
  *
  * @param {array} arrayOfPhotos
+ * @param {object} picturesItem
+ * @param {object} pictureTemplate
  */
-var createPhotos = function (arrayOfPhotos) {
+var createPhotos = function (arrayOfPhotos, picturesItem, pictureTemplate) {
 
   if (arrayOfPhotos.length === 0) {
     return;
   }
 
-  var similarPictureTemplate = document.querySelector('#picture-template').content;
-  var similarListElement = document.querySelector('.pictures');
-
   var newPhoto = document.createDocumentFragment();
 
   for (var i = 0; i < arrayOfPhotos.length; i++) {
 
-    var pictureTemplateItem = similarPictureTemplate.cloneNode(true);
+    var pictureTemplateItem = pictureTemplate.cloneNode(true);
 
     pictureTemplateItem.querySelector('img').src = arrayOfPhotos[i].url;
     pictureTemplateItem.querySelector('.picture-likes').textContent = arrayOfPhotos[i].likes;
@@ -163,7 +162,7 @@ var createPhotos = function (arrayOfPhotos) {
     newPhoto.appendChild(pictureTemplateItem);
   }
 
-  similarListElement.appendChild(newPhoto);
+  picturesItem.appendChild(newPhoto);
 };
 
 /**
@@ -196,7 +195,9 @@ var arrayOfPhotosComments = getArrayOfPhotosComments();
 
 var arrayOfPhotos = getArrayOfPhotos(arrayOfPhotosUrls, arrayOfPhotosLikes, arrayOfPhotosComments);
 
-createPhotos(arrayOfPhotos);
+var picturesItem = document.querySelector('.pictures');
+var pictureTemplate = document.querySelector('#picture-template').content;
+createPhotos(arrayOfPhotos, picturesItem, pictureTemplate);
 
 document.querySelector('.upload-overlay').classList.add('invisible');
 
