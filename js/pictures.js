@@ -15,6 +15,17 @@ var KEYS = {
   'ENTER': 13
 };
 
+var stepValueOfFrameScale = 25;
+var minValueOfFrameScale = 25;
+var maxValueOfFrameScale = 100;
+var currentValueOfFrameScale = 100;
+
+var descriptionMinLength = 30;
+var descriptionMaxLength = 100;
+
+var classOflastSelectedFilter;
+var lastSelectedFilter;
+
 var bodyItem = document.querySelector('body');
 var picturesItem = bodyItem.querySelector('.pictures');
 var pictureTemplate = bodyItem.querySelector('#picture-template').content;
@@ -23,41 +34,161 @@ var galleryOverlayItem = bodyItem.querySelector('.gallery-overlay');
 var galleryOverlayCloseItem = galleryOverlayItem.querySelector('.gallery-overlay-close');
 
 var uploadItem = bodyItem.querySelector('.upload');
+var uploadFilterItem = uploadItem.querySelector('.upload-filter');
+
 var uploadFileItem = uploadItem.querySelector('.upload-file');
-var uploadSelectImage = document.getElementById('upload-select-image');
+var uploadSelectImageItem = document.getElementById('upload-select-image');
 var uploadOverlayItem = uploadItem.querySelector('.upload-overlay');
-var uploadFormCancelItem = uploadOverlayItem.querySelector('.upload-form-cancel');
-var uploadSubmitItem = uploadOverlayItem.querySelector('.upload-form-submit');
+var uploadFormItem = uploadOverlayItem.querySelector('.upload-form');
+// var uploadFilterLabelItem = uploadFormItem.querySelector('.upload-filter-label');
+var uploadResizeControlsValueItem = uploadFormItem.querySelector('.upload-resize-controls-value');
+var uploadFormCancelItem = uploadFormItem.querySelector('.upload-form-cancel');
+var uploadSubmitItem = uploadFormItem.querySelector('.upload-form-submit');
+var uploadFormDescriptionItem = uploadFormItem.querySelector('.upload-form-description');
 
-var arrayOfPhotosUrls = [];
-createArrayOfPhotosUrls('photos', 'jpg');
+var filterImagePreviewItem = uploadFormItem.querySelector('.filter-image-preview');
+var uploadResizeControlsBbuttonDecItem = uploadFormItem.querySelector('.upload-resize-controls-button-dec');
+var uploadResizeControlsBbuttonIncItem = uploadFormItem.querySelector('.upload-resize-controls-button-inc');
 
-var arrayOfPhotosLikes = [];
-createArrayOfPhotosLikes(15, 200);
+uploadFileItem.setAttribute('tabindex', 0);
+uploadOverlayItem.setAttribute('tabindex', 0);
+document.getElementById('upload-filter-none').nextElementSibling.setAttribute('tabindex', 0);
+document.getElementById('upload-filter-chrome').nextElementSibling.setAttribute('tabindex', 0);
+document.getElementById('upload-filter-sepia').nextElementSibling.setAttribute('tabindex', 0);
+document.getElementById('upload-filter-marvin').nextElementSibling.setAttribute('tabindex', 0);
+document.getElementById('upload-filter-phobos').nextElementSibling.setAttribute('tabindex', 0);
+document.getElementById('upload-filter-heat').nextElementSibling.setAttribute('tabindex', 0);
 
-var arrayOfPhotosComments = [];
-createArrayOfPhotosComments();
+uploadResizeControlsValueItem.value = maxValueOfFrameScale + '%';
 
-var arrayOfPhotos = [];
-createArrayOfPhotos();
-
+var arrayOfPhotosUrls = createArrayOfPhotosUrls('photos', 'jpg');
+var arrayOfPhotosLikes = createArrayOfPhotosLikes(15, 200);
+var arrayOfPhotosComments = createArrayOfPhotosComments();
+var arrayOfPhotos = createArrayOfPhotos();
 createPhotos(picturesItem, pictureTemplate);
+fillPhoto(getPhotoByIndex(0), galleryOverlayItem);
 
 uploadOverlayItem.classList.add('invisible');
-galleryOverlayItem.classList.remove('invisible');
-uploadSelectImage.classList.remove('invisible');
-
-fillPhoto(getPhotoByIndex(0), galleryOverlayItem);
+uploadSelectImageItem.classList.remove('invisible');
 
 bodyItem.addEventListener('click', openPopupClickHandler);
 bodyItem.addEventListener('keydown', openPopupEnterPressHandler);
 galleryOverlayCloseItem.addEventListener('click', closePopupHandler);
 
 uploadFileItem.addEventListener('click', openFramingPopupClickHandler);
-uploadFormCancelItem.addEventListener('click', closeFramingPopupClickHandler);
 uploadFileItem.addEventListener('keydown', openFramingPopupEnterPressHandler);
+uploadFormCancelItem.addEventListener('click', closeFramingPopupClickHandler);
+
 uploadSubmitItem.addEventListener('click', closeFramingPopupClickHandler);
 uploadSubmitItem.addEventListener('keydown', closeFramingPopupEnterPressHandler);
+
+uploadFilterItem.addEventListener('click', choiceFilterClickHandler);
+uploadFilterItem.addEventListener('keydown', choiceFilterPressEnterHandler);
+
+uploadResizeControlsBbuttonDecItem.addEventListener('click', downScaleClickHandler);
+uploadResizeControlsBbuttonDecItem.addEventListener('onkeydown', downScalePressEnterHandler);
+
+uploadResizeControlsBbuttonIncItem.addEventListener('click', upScaleClickHandler);
+uploadResizeControlsBbuttonIncItem.addEventListener('onkeydown', upScalePressEnterHandler);
+
+/**
+* МЕТОДЫ ВАЛИДАЦИИ ФОРМЫ КАДРИРОВАНИЯ.
+*/
+
+/**
+ * Передаёт управление по клику методу по увеличению масштаба
+ * загружаемого изображения.
+ *
+ * @param {object} evt
+ */
+function upScaleClickHandler(evt) {
+  evt.preventDefault();
+  upScale(evt);
+}
+
+/**
+ * Передаёт управление по клику методу по уменьшению масштаба
+ * загружаемого изображения.
+ *
+ * @param {object} evt
+ */
+function downScaleClickHandler(evt) {
+  evt.preventDefault();
+  downScale(evt);
+}
+
+/**
+ * Передаёт управление по нажатию на ENTER методу по увеличению масштаба
+ * загружаемого изображения.
+ *
+ * @param {object} evt
+ */
+function upScalePressEnterHandler(evt) {
+  if (evt.keyCode === KEYS.ENTER) {
+    upScale(evt);
+  }
+}
+
+/**
+ * Передаёт управление по клику методу по уменьшению масштаба
+ * загружаемого изображения.
+ *
+ * @param {object} evt
+ */
+function downScalePressEnterHandler(evt) {
+  if (evt.keyCode === KEYS.ENTER) {
+    upScale(evt);
+  }
+}
+
+/**
+ * Увеличивает масштаб выбранного изображения.
+ *
+ * @param {object} evt
+ */
+function upScale(evt) {
+  if (uploadResizeControlsValueItem.value === maxValueOfFrameScale + '%') {
+    return;
+  }
+  currentValueOfFrameScale = currentValueOfFrameScale + stepValueOfFrameScale;
+  uploadResizeControlsValueItem.value = currentValueOfFrameScale + '%';
+  filterImagePreviewItem.style.transform = 'scale(' + currentValueOfFrameScale * 0.01 + ')';
+}
+
+/**
+ * Уменьшает масштаб выбранного изображения.
+ *
+ * @param {object} evt
+ */
+function downScale(evt) {
+  if (uploadResizeControlsValueItem.value === minValueOfFrameScale + '%') {
+    return;
+  }
+  currentValueOfFrameScale = currentValueOfFrameScale - stepValueOfFrameScale;
+  uploadResizeControlsValueItem.value = currentValueOfFrameScale + '%';
+  filterImagePreviewItem.style.transform = 'scale(' + currentValueOfFrameScale * 0.01 + ')';
+}
+
+/**
+ * Выставляет новый фильтр по клику мыши.
+ *
+ * @param {object} evt
+ */
+function choiceFilterClickHandler(evt) {
+  evt.preventDefault();
+  doNewFilter(evt);
+}
+
+/**
+ * Выставляет новый фильтр по нажатию на клавишу Enter.
+ *
+ * @param {object} evt
+ */
+function choiceFilterPressEnterHandler(evt) {
+  if (evt.keyCode === KEYS.ENTER) {
+    doNewFilter(evt);
+  }
+}
 
 /**
 * ОБРАБОТЧИКИ И МЕТОДЫ РАБОТЫ С КАДРИРОВАНИЕМ ИЗОБРАЖЕНИЯ.
@@ -80,6 +211,9 @@ function openFramingPopupClickHandler(evt) {
  */
 function closeFramingPopupClickHandler(evt) {
   evt.preventDefault();
+  if (checkFormDescriptionOnValueMissing() || !checkFormDescriptionOnValidTextLength()) {
+    return;
+  }
   closeFramingPopup();
 }
 
@@ -90,7 +224,7 @@ function closeFramingPopupClickHandler(evt) {
  */
 function closeFramingPopupEscPressHandler(evt) {
   if (evt.keyCode === KEYS.ESC) {
-    if (evt.target.className === 'upload-form-description') {
+    if (evt.target.className === 'upload-form-description' && evt.target.tagName === 'textarea') {
       return;
     }
     closeFramingPopup();
@@ -104,6 +238,9 @@ function closeFramingPopupEscPressHandler(evt) {
  */
 function closeFramingPopupEnterPressHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
+    if (checkFormDescriptionOnValueMissing() || checkFormDescriptionOnValidTextLength()) {
+      return;
+    }
     closeFramingPopup();
   }
 }
@@ -115,7 +252,6 @@ function closeFramingPopupEnterPressHandler(evt) {
  */
 function openFramingPopupEnterPressHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
-    evt.preventDefault();
     openFramingPopup();
   }
 }
@@ -125,19 +261,90 @@ function openFramingPopupEnterPressHandler(evt) {
  *
  * @param {object} evt
  */
-function openFramingPopup() {
+function openFramingPopup(evt) {
   uploadOverlayItem.classList.remove('invisible');
   document.addEventListener('keydown', closeFramingPopupEscPressHandler);
 }
 
 /**
  * Закрывает видимость элемента '.upload-overlay'
+ */
+function closeFramingPopup() {
+  uploadResizeControlsValueItem.value = maxValueOfFrameScale + '%';
+  if (typeof classOflastSelectedFilter !== 'undefined') {
+    filterImagePreviewItem.classList.remove(classOflastSelectedFilter);
+  }
+  filterImagePreviewItem.style.transform = 'scale(1.00)';
+  if (typeof lastSelectedFilter !== 'undefined') {
+    lastSelectedFilter.checked = false;
+  }
+  // uploadFilterLabelItem.checked = false;
+  uploadOverlayItem.classList.add('invisible');
+  uploadFormDescriptionItem.value = '';
+  document.removeEventListener('keydown', closeFramingPopupEscPressHandler);
+}
+
+/**
+ * Выставляет новый фильтр, при необходимости удаляя старый.
  *
  * @param {object} evt
  */
-function closeFramingPopup() {
-  uploadOverlayItem.classList.add('invisible');
-  document.removeEventListener('keydown', closeFramingPopupEscPressHandler);
+function doNewFilter(evt) {
+
+  if (evt.target.className !== 'upload-filter-preview' && evt.target.tagName !== 'LABEL') {
+    return;
+  }
+
+  if (typeof classOflastSelectedFilter !== 'undefined') {
+    filterImagePreviewItem.classList.remove(classOflastSelectedFilter);
+  }
+
+  var target = evt.target;
+  var search = true;
+
+  while (search) {
+    if (target.tagName === 'LABEL') {
+      lastSelectedFilter = target.control;
+      var currentInputItem = target.control;
+      currentInputItem.checked = true;
+      classOflastSelectedFilter = 'filter-' + currentInputItem.value;
+      filterImagePreviewItem.classList.add(classOflastSelectedFilter);
+      search = false;
+    }
+    if (!search) {
+      return;
+    }
+    target = target.parentElement;
+  }
+}
+
+/**
+ * Возвращает факт наличия или отсутствия обязательного значения
+ * в комментарии формы.
+ *
+ * @return {boolean}
+ */
+function checkFormDescriptionOnValueMissing() {
+  return uploadFormDescriptionItem.validity.valueMissing;
+}
+
+/**
+ * Возвращает факт не соответствия введённого значения заданным
+ * пределам длины в комментарии формы.
+ *
+ * @return {boolean}
+ */
+function checkFormDescriptionOnValidTextLength() {
+
+  var result = false;
+
+  if (uploadFormDescriptionItem.textLength >= descriptionMinLength
+    && uploadFormDescriptionItem.textLength <= descriptionMaxLength) {
+    result = true;
+    return result;
+  }
+
+  return result;
 }
 
 /**
@@ -163,10 +370,9 @@ function openPopupClickHandler(evt) {
  */
 function openPopupEnterPressHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
-    if (evt.target.className === 'gallery-overlay-close') {
+    if (evt.target.className === 'gallery-overlay-close' && evt.target.tagname === 'span') {
       closePopup();
     }
-    evt.preventDefault();
     openPopup(evt);
   }
 }
@@ -189,6 +395,7 @@ function closePopupEscPressHandler(evt) {
  * @return {number}
  */
 function getPhotoId(evt) {
+
   if (evt.target.localName === 'img') {
     return evt.target.parentElement.getAttribute('data-photo-id');
   }
@@ -213,6 +420,7 @@ function closePopupHandler(evt) {
 function openPopup(evt) {
 
   var photoId = getPhotoId(evt);
+
   if (photoId === null || photoId < 0) {
     return;
   }
@@ -256,41 +464,54 @@ function getRandomNumber(min, max) {
 }
 
 /**
- * Заполняет массив, содержащий адреса фотографий.
+ * Возвращает массив, содержащий адреса фотографий.
  *
  * @param {string} path
  * @param {string} extension
+ * @return {object}
  */
 function createArrayOfPhotosUrls(path, extension) {
 
+  var localArray = [];
   var photoUrl;
 
   for (var i = 1; i < PHOTOS_COUNT + 1; i++) {
 
     do {
       photoUrl = path + '/' + getRandomNumber(1, PHOTOS_COUNT) + '.' + extension;
-    } while (arrayOfPhotosUrls.indexOf(photoUrl) !== -1);
+    } while (localArray.indexOf(photoUrl) !== -1);
 
-    arrayOfPhotosUrls.push(photoUrl);
+    localArray.push(photoUrl);
   }
+
+  return localArray;
 }
 
 /**
- * Заполняет массив, содержащий случайное кол-во лайков для каждой фотографии.
+ * Возвращает массив, содержащий случайное кол-во лайков для каждой фотографии.
  *
  * @param {number} minCountLikes
  * @param {number} maxCountLikes
+ * @return {object}
  */
 function createArrayOfPhotosLikes(minCountLikes, maxCountLikes) {
+
+  var localArray = [];
+
   for (var i = 0; i < PHOTOS_COUNT; i++) {
-    arrayOfPhotosLikes.push(getRandomNumber(minCountLikes, maxCountLikes));
+    localArray.push(getRandomNumber(minCountLikes, maxCountLikes));
   }
+  return localArray;
 }
 
 /**
- * Заполняет массив, содержащий массивы со случайным кол-вом комментариев для каждой фотографии.
+ * Возвращает массив, содержащий массивы со случайным кол-вом комментариев для каждой фотографии.
+ *
+ * @return {array}
  */
 function createArrayOfPhotosComments() {
+
+  var localArray = [];
 
   for (var i = 0; i < PHOTOS_COUNT; i++) {
 
@@ -320,8 +541,10 @@ function createArrayOfPhotosComments() {
 
       arrayOfOnePhotoComments.push(jointSentence);
     }
-    arrayOfPhotosComments.push(arrayOfOnePhotoComments);
+    localArray.push(arrayOfOnePhotoComments);
   }
+
+  return localArray;
 }
 
 /**
@@ -342,12 +565,20 @@ function createPhoto(index) {
 }
 
 /**
- * Заполняет массив объектов, каждый из которого включает в себя
+ * Заполняет массив объектов, каждый из которых представляет собой
+ * фотографию.
+ *
+ * @return {object}
  */
 function createArrayOfPhotos() {
+
+  var localArray = [];
+
   for (var i = 0; i < PHOTOS_COUNT; i++) {
-    arrayOfPhotos.push(createPhoto(i));
+    localArray.push(createPhoto(i));
   }
+
+  return localArray;
 }
 
 /**
