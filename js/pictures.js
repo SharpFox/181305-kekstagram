@@ -80,7 +80,8 @@ uploadSelectImageItem.classList.remove('invisible');
 
 bodyItem.addEventListener('click', openPopupClickHandler);
 bodyItem.addEventListener('keydown', openPopupEnterPressHandler);
-galleryOverlayCloseItem.addEventListener('click', closePopupHandler);
+galleryOverlayCloseItem.addEventListener('click', closePopupClickHandler);
+galleryOverlayCloseItem.addEventListener('keydown', closePopupEnterPressHandler);
 
 uploadFileItem.addEventListener('click', openFramingPopupClickHandler);
 uploadFileItem.addEventListener('keydown', openFramingPopupEnterPressHandler);
@@ -99,16 +100,16 @@ uploadResizeControlsBbuttonIncItem.addEventListener('click', upScaleClickHandler
 uploadResizeControlsBbuttonIncItem.addEventListener('onkeydown', upScalePressEnterHandler);
 
 /**
- * Присваивает tabindex = 0 вложенным элементам. 
+ * Присваивает tabindex = 0 вложенным элементам.
  *
- * @param {object} uploadFilterLabelAll 
+ * @param {object} elementAll
  */
-function setAttributeTabIndexForDOMElement(uploadFilterLabelAll) {
-  
-  var length = uploadFilterLabelAll.length;
- 
+function setAttributeTabIndexForDOMElement(elementAll) {
+
+  var length = elementAll.length;
+
   for (var i = 0; i < length; i++) {
-    uploadFilterLabelAll[i].setAttribute('tabindex', 0);
+    elementAll[i].setAttribute('tabindex', 0);
   }
 }
 
@@ -123,7 +124,6 @@ function setAttributeTabIndexForDOMElement(uploadFilterLabelAll) {
  * @param {object} evt
  */
 function upScaleClickHandler(evt) {
-  //evt.preventDefault();
   upScale(evt);
 }
 
@@ -134,7 +134,6 @@ function upScaleClickHandler(evt) {
  * @param {object} evt
  */
 function downScaleClickHandler(evt) {
-  //evt.preventDefault();
   downScale(evt);
 }
 
@@ -146,7 +145,6 @@ function downScaleClickHandler(evt) {
  */
 function upScalePressEnterHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
-    //evt.preventDefault();
     upScale(evt);
   }
 }
@@ -159,7 +157,6 @@ function upScalePressEnterHandler(evt) {
  */
 function downScalePressEnterHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
-    //evt.preventDefault();
     upScale(evt);
   }
 }
@@ -176,7 +173,6 @@ function upScale(evt) {
   currentValueOfFrameScale = currentValueOfFrameScale + stepValueOfFrameScale;
   uploadResizeControlsValueItem.value = currentValueOfFrameScale + '%';
   filterImagePreviewItem.style.transform = 'scale(' + currentValueOfFrameScale * 0.01 + ')';
-  evt.preventDefault();
 }
 
 /**
@@ -191,7 +187,6 @@ function downScale(evt) {
   currentValueOfFrameScale = currentValueOfFrameScale - stepValueOfFrameScale;
   uploadResizeControlsValueItem.value = currentValueOfFrameScale + '%';
   filterImagePreviewItem.style.transform = 'scale(' + currentValueOfFrameScale * 0.01 + ')';
-  evt.preventDefault();
 }
 
 /**
@@ -200,7 +195,6 @@ function downScale(evt) {
  * @param {object} evt
  */
 function choiceFilterClickHandler(evt) {
-  //evt.preventDefault();
   doNewFilter(evt);
 }
 
@@ -211,7 +205,6 @@ function choiceFilterClickHandler(evt) {
  */
 function choiceFilterPressEnterHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
-    //evt.preventDefault();
     doNewFilter(evt);
   }
 }
@@ -238,8 +231,7 @@ function openFramingPopupClickHandler(evt) {
 function closeFramingPopupClickHandler(evt) {
   if (evt.currentTarget.className === 'upload-form-cancel') {
     evt.preventDefault();
-  }
-  else if (uploadFormDescriptionItem.validity.valueMissing || !checkFormDescriptionOnValidTextLength()) {
+  } else if (uploadFormDescriptionItem.validity.valueMissing || !checkFormDescriptionOnValidTextLength()) {
     return;
   }
   closeFramingPopup();
@@ -252,7 +244,6 @@ function closeFramingPopupClickHandler(evt) {
  */
 function closeFramingPopupEscPressHandler(evt) {
   if (evt.keyCode === KEYS.ESC) {
-    //evt.preventDefault();
     if (evt.target.className === 'upload-form-description' && evt.target.tagName === 'textarea') {
       return;
     }
@@ -267,7 +258,6 @@ function closeFramingPopupEscPressHandler(evt) {
  */
 function closeFramingPopupEnterPressHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
-    //evt.preventDefault();
     if (uploadFormDescriptionItem.validity.valueMissing || checkFormDescriptionOnValidTextLength()) {
       return;
     }
@@ -342,7 +332,6 @@ function doNewFilter(evt) {
     }
     target = target.parentElement;
   }
-  evt.preventDefault();
 }
 
 /**
@@ -375,7 +364,6 @@ function checkFormDescriptionOnValidTextLength() {
  * @param {object} evt
  */
 function openPopupClickHandler(evt) {
-  //evt.preventDefault();
   openPopup(evt);
 }
 
@@ -387,9 +375,8 @@ function openPopupClickHandler(evt) {
  */
 function openPopupEnterPressHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
-   //evt.preventDefault();
     if (evt.target.className === 'gallery-overlay-close' && evt.target.tagname === 'span') {
-      closePopup();
+      closePopup(evt);
     }
     openPopup(evt);
   }
@@ -402,8 +389,7 @@ function openPopupEnterPressHandler(evt) {
  */
 function closePopupEscPressHandler(evt) {
   if (evt.keyCode === KEYS.ESC) {
-    //evt.preventDefault();
-    closePopup();
+    closePopup(evt);
   }
 }
 
@@ -426,9 +412,19 @@ function getPhotoId(evt) {
  *
  * @param {object} evt
  */
-function closePopupHandler(evt) {
-  //evt.preventDefault();
-  closePopup();
+function closePopupClickHandler(evt) {
+  closePopup(evt);
+}
+
+/**
+ * Обработчик, закрывающий всплывающее окно по нажатию клавиши Enter.
+ *
+ * @param {object} evt
+ */
+function closePopupEnterPressHandler(evt) {
+  if (evt.keyCode === KEYS.ENTER) {
+    closePopup(evt);
+  }
 }
 
 /**
@@ -452,8 +448,10 @@ function openPopup(evt) {
 
 /**
  * Закрывает видимость элемента '.gallery-overlay'
+ *
+ * @param {object} evt
  */
-function closePopup() {
+function closePopup(evt) {
   galleryOverlayItem.classList.add('invisible');
   document.removeEventListener('keydown', closePopupEscPressHandler);
   evt.preventDefault();
