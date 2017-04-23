@@ -406,10 +406,12 @@ input[type=radio]:checked + .upload-filter-label .upload-filter-preview {
 }
 
 .upload-form-description:required:valid {
+  border-width: 3px;
   border-color: green;
 }
 
 .upload-form-description:required:invalid {
+  border-width: 3px;
   border-color: red;
 }
 

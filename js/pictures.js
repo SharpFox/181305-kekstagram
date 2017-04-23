@@ -15,6 +15,15 @@ var KEYS = {
   'ENTER': 13
 };
 
+var FILTERS = {
+  'none': 'filter-none',
+  'chrome': 'filter-chrome',
+  'sepia': 'filter-sepia',
+  'marvin': 'filter-marvin',
+  'phobos': 'filter-phobos',
+  'heat': 'filter-heat',
+};
+
 var stepValueOfFrameScale = 25;
 var minValueOfFrameScale = 25;
 var maxValueOfFrameScale = 100;
@@ -34,30 +43,28 @@ var galleryOverlayItem = bodyItem.querySelector('.gallery-overlay');
 var galleryOverlayCloseItem = galleryOverlayItem.querySelector('.gallery-overlay-close');
 
 var uploadItem = bodyItem.querySelector('.upload');
-var uploadFilterItem = uploadItem.querySelector('.upload-filter');
+var uploadFilterForm = uploadItem.querySelector('.upload-filter');
+var uploadFilterControlsItem = uploadItem.querySelector('.upload-filter-controls');
 
 var uploadFileItem = uploadItem.querySelector('.upload-file');
 var uploadSelectImageItem = document.getElementById('upload-select-image');
 var uploadOverlayItem = uploadItem.querySelector('.upload-overlay');
-var uploadFormItem = uploadOverlayItem.querySelector('.upload-form');
-// var uploadFilterLabelItem = uploadFormItem.querySelector('.upload-filter-label');
-var uploadResizeControlsValueItem = uploadFormItem.querySelector('.upload-resize-controls-value');
-var uploadFormCancelItem = uploadFormItem.querySelector('.upload-form-cancel');
-var uploadSubmitItem = uploadFormItem.querySelector('.upload-form-submit');
-var uploadFormDescriptionItem = uploadFormItem.querySelector('.upload-form-description');
+var uploadForm = uploadOverlayItem.querySelector('.upload-form');
+var uploadResizeControlsValueItem = uploadForm.querySelector('.upload-resize-controls-value');
+var uploadFormCancelItem = uploadForm.querySelector('.upload-form-cancel');
+var uploadSubmitItem = uploadForm.querySelector('.upload-form-submit');
+var uploadFormDescriptionItem = uploadForm.querySelector('.upload-form-description');
 
-var filterImagePreviewItem = uploadFormItem.querySelector('.filter-image-preview');
-var uploadResizeControlsBbuttonDecItem = uploadFormItem.querySelector('.upload-resize-controls-button-dec');
-var uploadResizeControlsBbuttonIncItem = uploadFormItem.querySelector('.upload-resize-controls-button-inc');
+var filterImagePreviewItem = uploadForm.querySelector('.filter-image-preview');
+var uploadResizeControlsBbuttonDecItem = uploadForm.querySelector('.upload-resize-controls-button-dec');
+var uploadResizeControlsBbuttonIncItem = uploadForm.querySelector('.upload-resize-controls-button-inc');
+
+var uploadFilterLabelItem = uploadFilterControlsItem.querySelector('.upload-filter-label');
+var uploadFilterLabelAll = uploadFilterControlsItem.querySelectorAll('.upload-filter-label');
 
 uploadFileItem.setAttribute('tabindex', 0);
 uploadOverlayItem.setAttribute('tabindex', 0);
-document.getElementById('upload-filter-none').nextElementSibling.setAttribute('tabindex', 0);
-document.getElementById('upload-filter-chrome').nextElementSibling.setAttribute('tabindex', 0);
-document.getElementById('upload-filter-sepia').nextElementSibling.setAttribute('tabindex', 0);
-document.getElementById('upload-filter-marvin').nextElementSibling.setAttribute('tabindex', 0);
-document.getElementById('upload-filter-phobos').nextElementSibling.setAttribute('tabindex', 0);
-document.getElementById('upload-filter-heat').nextElementSibling.setAttribute('tabindex', 0);
+setAttributeTabIndexForDOMElement(uploadFilterLabelAll);
 
 uploadResizeControlsValueItem.value = maxValueOfFrameScale + '%';
 
@@ -82,14 +89,28 @@ uploadFormCancelItem.addEventListener('click', closeFramingPopupClickHandler);
 uploadSubmitItem.addEventListener('click', closeFramingPopupClickHandler);
 uploadSubmitItem.addEventListener('keydown', closeFramingPopupEnterPressHandler);
 
-uploadFilterItem.addEventListener('click', choiceFilterClickHandler);
-uploadFilterItem.addEventListener('keydown', choiceFilterPressEnterHandler);
+uploadFilterForm.addEventListener('click', choiceFilterClickHandler);
+uploadFilterForm.addEventListener('keydown', choiceFilterPressEnterHandler);
 
 uploadResizeControlsBbuttonDecItem.addEventListener('click', downScaleClickHandler);
 uploadResizeControlsBbuttonDecItem.addEventListener('onkeydown', downScalePressEnterHandler);
 
 uploadResizeControlsBbuttonIncItem.addEventListener('click', upScaleClickHandler);
 uploadResizeControlsBbuttonIncItem.addEventListener('onkeydown', upScalePressEnterHandler);
+
+/**
+ * Присваивает tabindex = 0 вложенным элементам. 
+ *
+ * @param {object} uploadFilterLabelAll 
+ */
+function setAttributeTabIndexForDOMElement(uploadFilterLabelAll) {
+  
+  var length = uploadFilterLabelAll.length;
+ 
+  for (var i = 0; i < length; i++) {
+    uploadFilterLabelAll[i].setAttribute('tabindex', 0);
+  }
+}
 
 /**
 * МЕТОДЫ ВАЛИДАЦИИ ФОРМЫ КАДРИРОВАНИЯ.
@@ -102,7 +123,7 @@ uploadResizeControlsBbuttonIncItem.addEventListener('onkeydown', upScalePressEnt
  * @param {object} evt
  */
 function upScaleClickHandler(evt) {
-  evt.preventDefault();
+  //evt.preventDefault();
   upScale(evt);
 }
 
@@ -113,7 +134,7 @@ function upScaleClickHandler(evt) {
  * @param {object} evt
  */
 function downScaleClickHandler(evt) {
-  evt.preventDefault();
+  //evt.preventDefault();
   downScale(evt);
 }
 
@@ -125,6 +146,7 @@ function downScaleClickHandler(evt) {
  */
 function upScalePressEnterHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
+    //evt.preventDefault();
     upScale(evt);
   }
 }
@@ -137,6 +159,7 @@ function upScalePressEnterHandler(evt) {
  */
 function downScalePressEnterHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
+    //evt.preventDefault();
     upScale(evt);
   }
 }
@@ -153,6 +176,7 @@ function upScale(evt) {
   currentValueOfFrameScale = currentValueOfFrameScale + stepValueOfFrameScale;
   uploadResizeControlsValueItem.value = currentValueOfFrameScale + '%';
   filterImagePreviewItem.style.transform = 'scale(' + currentValueOfFrameScale * 0.01 + ')';
+  evt.preventDefault();
 }
 
 /**
@@ -167,6 +191,7 @@ function downScale(evt) {
   currentValueOfFrameScale = currentValueOfFrameScale - stepValueOfFrameScale;
   uploadResizeControlsValueItem.value = currentValueOfFrameScale + '%';
   filterImagePreviewItem.style.transform = 'scale(' + currentValueOfFrameScale * 0.01 + ')';
+  evt.preventDefault();
 }
 
 /**
@@ -175,7 +200,7 @@ function downScale(evt) {
  * @param {object} evt
  */
 function choiceFilterClickHandler(evt) {
-  evt.preventDefault();
+  //evt.preventDefault();
   doNewFilter(evt);
 }
 
@@ -186,6 +211,7 @@ function choiceFilterClickHandler(evt) {
  */
 function choiceFilterPressEnterHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
+    //evt.preventDefault();
     doNewFilter(evt);
   }
 }
@@ -200,8 +226,8 @@ function choiceFilterPressEnterHandler(evt) {
  * @param {object} evt
  */
 function openFramingPopupClickHandler(evt) {
-  evt.preventDefault();
   openFramingPopup();
+  evt.preventDefault();
 }
 
 /**
@@ -210,8 +236,10 @@ function openFramingPopupClickHandler(evt) {
  * @param {object} evt
  */
 function closeFramingPopupClickHandler(evt) {
-  evt.preventDefault();
-  if (checkFormDescriptionOnValueMissing() || !checkFormDescriptionOnValidTextLength()) {
+  if (evt.currentTarget.className === 'upload-form-cancel') {
+    evt.preventDefault();
+  }
+  else if (uploadFormDescriptionItem.validity.valueMissing || !checkFormDescriptionOnValidTextLength()) {
     return;
   }
   closeFramingPopup();
@@ -224,6 +252,7 @@ function closeFramingPopupClickHandler(evt) {
  */
 function closeFramingPopupEscPressHandler(evt) {
   if (evt.keyCode === KEYS.ESC) {
+    //evt.preventDefault();
     if (evt.target.className === 'upload-form-description' && evt.target.tagName === 'textarea') {
       return;
     }
@@ -238,7 +267,8 @@ function closeFramingPopupEscPressHandler(evt) {
  */
 function closeFramingPopupEnterPressHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
-    if (checkFormDescriptionOnValueMissing() || checkFormDescriptionOnValidTextLength()) {
+    //evt.preventDefault();
+    if (uploadFormDescriptionItem.validity.valueMissing || checkFormDescriptionOnValidTextLength()) {
       return;
     }
     closeFramingPopup();
@@ -253,6 +283,7 @@ function closeFramingPopupEnterPressHandler(evt) {
 function openFramingPopupEnterPressHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
     openFramingPopup();
+    evt.preventDefault();
   }
 }
 
@@ -278,7 +309,7 @@ function closeFramingPopup() {
   if (typeof lastSelectedFilter !== 'undefined') {
     lastSelectedFilter.checked = false;
   }
-  // uploadFilterLabelItem.checked = false;
+  uploadFilterLabelItem.checked = true;
   uploadOverlayItem.classList.add('invisible');
   uploadFormDescriptionItem.value = '';
   document.removeEventListener('keydown', closeFramingPopupEscPressHandler);
@@ -300,32 +331,18 @@ function doNewFilter(evt) {
   }
 
   var target = evt.target;
-  var search = true;
+  var siblingTarget;
 
-  while (search) {
-    if (target.tagName === 'LABEL') {
-      lastSelectedFilter = target.control;
-      var currentInputItem = target.control;
-      currentInputItem.checked = true;
-      classOflastSelectedFilter = 'filter-' + currentInputItem.value;
+  while (target !== uploadFilterControlsItem) {
+    siblingTarget = target.previousElementSibling;
+    if (siblingTarget !== null && siblingTarget.tagName === 'INPUT') {
+      siblingTarget.checked = true;
+      classOflastSelectedFilter = FILTERS[siblingTarget.value];
       filterImagePreviewItem.classList.add(classOflastSelectedFilter);
-      search = false;
-    }
-    if (!search) {
-      return;
     }
     target = target.parentElement;
   }
-}
-
-/**
- * Возвращает факт наличия или отсутствия обязательного значения
- * в комментарии формы.
- *
- * @return {boolean}
- */
-function checkFormDescriptionOnValueMissing() {
-  return uploadFormDescriptionItem.validity.valueMissing;
+  evt.preventDefault();
 }
 
 /**
@@ -358,7 +375,7 @@ function checkFormDescriptionOnValidTextLength() {
  * @param {object} evt
  */
 function openPopupClickHandler(evt) {
-  evt.preventDefault();
+  //evt.preventDefault();
   openPopup(evt);
 }
 
@@ -370,6 +387,7 @@ function openPopupClickHandler(evt) {
  */
 function openPopupEnterPressHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
+   //evt.preventDefault();
     if (evt.target.className === 'gallery-overlay-close' && evt.target.tagname === 'span') {
       closePopup();
     }
@@ -384,6 +402,7 @@ function openPopupEnterPressHandler(evt) {
  */
 function closePopupEscPressHandler(evt) {
   if (evt.keyCode === KEYS.ESC) {
+    //evt.preventDefault();
     closePopup();
   }
 }
@@ -408,7 +427,7 @@ function getPhotoId(evt) {
  * @param {object} evt
  */
 function closePopupHandler(evt) {
-  evt.preventDefault();
+  //evt.preventDefault();
   closePopup();
 }
 
@@ -427,6 +446,8 @@ function openPopup(evt) {
   fillPhoto(arrayOfPhotos[photoId], galleryOverlayItem);
   galleryOverlayItem.classList.remove('invisible');
   document.addEventListener('keydown', closePopupEscPressHandler);
+
+  evt.preventDefault();
 }
 
 /**
@@ -435,6 +456,7 @@ function openPopup(evt) {
 function closePopup() {
   galleryOverlayItem.classList.add('invisible');
   document.removeEventListener('keydown', closePopupEscPressHandler);
+  evt.preventDefault();
 }
 
 /**
