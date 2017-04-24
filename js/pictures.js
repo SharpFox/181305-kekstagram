@@ -15,6 +15,26 @@ var KEYS = {
   'ENTER': 13
 };
 
+var FILTERS = {
+  'none': 'filter-none',
+  'chrome': 'filter-chrome',
+  'sepia': 'filter-sepia',
+  'marvin': 'filter-marvin',
+  'phobos': 'filter-phobos',
+  'heat': 'filter-heat',
+};
+
+var stepValueOfFrameScale = 25;
+var minValueOfFrameScale = 25;
+var maxValueOfFrameScale = 100;
+var currentValueOfFrameScale = 100;
+
+var descriptionMinLength = 30;
+var descriptionMaxLength = 100;
+
+var classOflastSelectedFilter;
+var lastSelectedFilter;
+
 var bodyItem = document.querySelector('body');
 var picturesItem = bodyItem.querySelector('.pictures');
 var pictureTemplate = bodyItem.querySelector('#picture-template').content;
@@ -23,41 +43,171 @@ var galleryOverlayItem = bodyItem.querySelector('.gallery-overlay');
 var galleryOverlayCloseItem = galleryOverlayItem.querySelector('.gallery-overlay-close');
 
 var uploadItem = bodyItem.querySelector('.upload');
+var uploadFilterForm = uploadItem.querySelector('.upload-filter');
+var uploadFilterControlsItem = uploadItem.querySelector('.upload-filter-controls');
+
 var uploadFileItem = uploadItem.querySelector('.upload-file');
-var uploadSelectImage = document.getElementById('upload-select-image');
+var uploadSelectImageItem = document.getElementById('upload-select-image');
 var uploadOverlayItem = uploadItem.querySelector('.upload-overlay');
-var uploadFormCancelItem = uploadOverlayItem.querySelector('.upload-form-cancel');
-var uploadSubmitItem = uploadOverlayItem.querySelector('.upload-form-submit');
+var uploadForm = uploadOverlayItem.querySelector('.upload-form');
+var uploadResizeControlsValueItem = uploadForm.querySelector('.upload-resize-controls-value');
+var uploadFormCancelItem = uploadForm.querySelector('.upload-form-cancel');
+var uploadSubmitItem = uploadForm.querySelector('.upload-form-submit');
+var uploadFormDescriptionItem = uploadForm.querySelector('.upload-form-description');
 
-var arrayOfPhotosUrls = [];
-createArrayOfPhotosUrls('photos', 'jpg');
+var filterImagePreviewItem = uploadForm.querySelector('.filter-image-preview');
+var uploadResizeControlsBbuttonDecItem = uploadForm.querySelector('.upload-resize-controls-button-dec');
+var uploadResizeControlsBbuttonIncItem = uploadForm.querySelector('.upload-resize-controls-button-inc');
 
-var arrayOfPhotosLikes = [];
-createArrayOfPhotosLikes(15, 200);
+var uploadFilterLabelItem = uploadFilterControlsItem.querySelector('.upload-filter-label');
+var uploadFilterLabelAll = uploadFilterControlsItem.querySelectorAll('.upload-filter-label');
 
-var arrayOfPhotosComments = [];
-createArrayOfPhotosComments();
+uploadFileItem.setAttribute('tabindex', 0);
+uploadOverlayItem.setAttribute('tabindex', 0);
+setAttributeTabIndexForDOMElement(uploadFilterLabelAll);
 
-var arrayOfPhotos = [];
-createArrayOfPhotos();
+uploadResizeControlsValueItem.value = maxValueOfFrameScale + '%';
 
+var arrayOfPhotosUrls = createArrayOfPhotosUrls('photos', 'jpg');
+var arrayOfPhotosLikes = createArrayOfPhotosLikes(15, 200);
+var arrayOfPhotosComments = createArrayOfPhotosComments();
+var arrayOfPhotos = createArrayOfPhotos();
 createPhotos(picturesItem, pictureTemplate);
+fillPhoto(getPhotoByIndex(0), galleryOverlayItem);
 
 uploadOverlayItem.classList.add('invisible');
-galleryOverlayItem.classList.remove('invisible');
-uploadSelectImage.classList.remove('invisible');
-
-fillPhoto(getPhotoByIndex(0), galleryOverlayItem);
+uploadSelectImageItem.classList.remove('invisible');
 
 bodyItem.addEventListener('click', openPopupClickHandler);
 bodyItem.addEventListener('keydown', openPopupEnterPressHandler);
-galleryOverlayCloseItem.addEventListener('click', closePopupHandler);
+galleryOverlayCloseItem.addEventListener('click', closePopupClickHandler);
+galleryOverlayCloseItem.addEventListener('keydown', closePopupEnterPressHandler);
 
 uploadFileItem.addEventListener('click', openFramingPopupClickHandler);
-uploadFormCancelItem.addEventListener('click', closeFramingPopupClickHandler);
 uploadFileItem.addEventListener('keydown', openFramingPopupEnterPressHandler);
+uploadFormCancelItem.addEventListener('click', closeFramingPopupClickHandler);
+
 uploadSubmitItem.addEventListener('click', closeFramingPopupClickHandler);
 uploadSubmitItem.addEventListener('keydown', closeFramingPopupEnterPressHandler);
+
+uploadFilterForm.addEventListener('click', choiceFilterClickHandler);
+uploadFilterForm.addEventListener('keydown', choiceFilterPressEnterHandler);
+
+uploadResizeControlsBbuttonDecItem.addEventListener('click', downScaleClickHandler);
+uploadResizeControlsBbuttonDecItem.addEventListener('onkeydown', downScalePressEnterHandler);
+
+uploadResizeControlsBbuttonIncItem.addEventListener('click', upScaleClickHandler);
+uploadResizeControlsBbuttonIncItem.addEventListener('onkeydown', upScalePressEnterHandler);
+
+/**
+ * Присваивает tabindex = 0 вложенным элементам.
+ *
+ * @param {object} elementAll
+ */
+function setAttributeTabIndexForDOMElement(elementAll) {
+
+  var length = elementAll.length;
+
+  for (var i = 0; i < length; i++) {
+    elementAll[i].setAttribute('tabindex', 0);
+  }
+}
+
+/**
+* МЕТОДЫ ВАЛИДАЦИИ ФОРМЫ КАДРИРОВАНИЯ.
+*/
+
+/**
+ * Передаёт управление по клику методу по увеличению масштаба
+ * загружаемого изображения.
+ *
+ * @param {object} evt
+ */
+function upScaleClickHandler(evt) {
+  upScale(evt);
+}
+
+/**
+ * Передаёт управление по клику методу по уменьшению масштаба
+ * загружаемого изображения.
+ *
+ * @param {object} evt
+ */
+function downScaleClickHandler(evt) {
+  downScale(evt);
+}
+
+/**
+ * Передаёт управление по нажатию на ENTER методу по увеличению масштаба
+ * загружаемого изображения.
+ *
+ * @param {object} evt
+ */
+function upScalePressEnterHandler(evt) {
+  if (evt.keyCode === KEYS.ENTER) {
+    upScale(evt);
+  }
+}
+
+/**
+ * Передаёт управление по клику методу по уменьшению масштаба
+ * загружаемого изображения.
+ *
+ * @param {object} evt
+ */
+function downScalePressEnterHandler(evt) {
+  if (evt.keyCode === KEYS.ENTER) {
+    upScale(evt);
+  }
+}
+
+/**
+ * Увеличивает масштаб выбранного изображения.
+ *
+ * @param {object} evt
+ */
+function upScale(evt) {
+  if (uploadResizeControlsValueItem.value === maxValueOfFrameScale + '%') {
+    return;
+  }
+  currentValueOfFrameScale = currentValueOfFrameScale + stepValueOfFrameScale;
+  uploadResizeControlsValueItem.value = currentValueOfFrameScale + '%';
+  filterImagePreviewItem.style.transform = 'scale(' + currentValueOfFrameScale * 0.01 + ')';
+}
+
+/**
+ * Уменьшает масштаб выбранного изображения.
+ *
+ * @param {object} evt
+ */
+function downScale(evt) {
+  if (uploadResizeControlsValueItem.value === minValueOfFrameScale + '%') {
+    return;
+  }
+  currentValueOfFrameScale = currentValueOfFrameScale - stepValueOfFrameScale;
+  uploadResizeControlsValueItem.value = currentValueOfFrameScale + '%';
+  filterImagePreviewItem.style.transform = 'scale(' + currentValueOfFrameScale * 0.01 + ')';
+}
+
+/**
+ * Выставляет новый фильтр по клику мыши.
+ *
+ * @param {object} evt
+ */
+function choiceFilterClickHandler(evt) {
+  doNewFilter(evt);
+}
+
+/**
+ * Выставляет новый фильтр по нажатию на клавишу Enter.
+ *
+ * @param {object} evt
+ */
+function choiceFilterPressEnterHandler(evt) {
+  if (evt.keyCode === KEYS.ENTER) {
+    doNewFilter(evt);
+  }
+}
 
 /**
 * ОБРАБОТЧИКИ И МЕТОДЫ РАБОТЫ С КАДРИРОВАНИЕМ ИЗОБРАЖЕНИЯ.
@@ -69,8 +219,8 @@ uploadSubmitItem.addEventListener('keydown', closeFramingPopupEnterPressHandler)
  * @param {object} evt
  */
 function openFramingPopupClickHandler(evt) {
-  evt.preventDefault();
   openFramingPopup();
+  evt.preventDefault();
 }
 
 /**
@@ -79,7 +229,11 @@ function openFramingPopupClickHandler(evt) {
  * @param {object} evt
  */
 function closeFramingPopupClickHandler(evt) {
-  evt.preventDefault();
+  if (evt.currentTarget.className === 'upload-form-cancel') {
+    evt.preventDefault();
+  } else if (uploadFormDescriptionItem.validity.valueMissing || !checkFormDescriptionOnValidTextLength()) {
+    return;
+  }
   closeFramingPopup();
 }
 
@@ -90,7 +244,7 @@ function closeFramingPopupClickHandler(evt) {
  */
 function closeFramingPopupEscPressHandler(evt) {
   if (evt.keyCode === KEYS.ESC) {
-    if (evt.target.className === 'upload-form-description') {
+    if (evt.target.className === 'upload-form-description' && evt.target.tagName === 'textarea') {
       return;
     }
     closeFramingPopup();
@@ -104,6 +258,9 @@ function closeFramingPopupEscPressHandler(evt) {
  */
 function closeFramingPopupEnterPressHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
+    if (uploadFormDescriptionItem.validity.valueMissing || checkFormDescriptionOnValidTextLength()) {
+      return;
+    }
     closeFramingPopup();
   }
 }
@@ -115,8 +272,8 @@ function closeFramingPopupEnterPressHandler(evt) {
  */
 function openFramingPopupEnterPressHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
-    evt.preventDefault();
     openFramingPopup();
+    evt.preventDefault();
   }
 }
 
@@ -125,19 +282,75 @@ function openFramingPopupEnterPressHandler(evt) {
  *
  * @param {object} evt
  */
-function openFramingPopup() {
+function openFramingPopup(evt) {
   uploadOverlayItem.classList.remove('invisible');
   document.addEventListener('keydown', closeFramingPopupEscPressHandler);
 }
 
 /**
  * Закрывает видимость элемента '.upload-overlay'
+ */
+function closeFramingPopup() {
+  uploadResizeControlsValueItem.value = maxValueOfFrameScale + '%';
+  if (typeof classOflastSelectedFilter !== 'undefined') {
+    filterImagePreviewItem.classList.remove(classOflastSelectedFilter);
+  }
+  filterImagePreviewItem.style.transform = 'scale(1.00)';
+  if (typeof lastSelectedFilter !== 'undefined') {
+    lastSelectedFilter.checked = false;
+  }
+  uploadFilterLabelItem.checked = true;
+  uploadOverlayItem.classList.add('invisible');
+  uploadFormDescriptionItem.value = '';
+  document.removeEventListener('keydown', closeFramingPopupEscPressHandler);
+}
+
+/**
+ * Выставляет новый фильтр, при необходимости удаляя старый.
  *
  * @param {object} evt
  */
-function closeFramingPopup() {
-  uploadOverlayItem.classList.add('invisible');
-  document.removeEventListener('keydown', closeFramingPopupEscPressHandler);
+function doNewFilter(evt) {
+
+  if (evt.target.className !== 'upload-filter-preview' && evt.target.tagName !== 'LABEL') {
+    return;
+  }
+
+  if (typeof classOflastSelectedFilter !== 'undefined') {
+    filterImagePreviewItem.classList.remove(classOflastSelectedFilter);
+  }
+
+  var target = evt.target;
+  var siblingTarget;
+
+  while (target !== uploadFilterControlsItem) {
+    siblingTarget = target.previousElementSibling;
+    if (siblingTarget !== null && siblingTarget.tagName === 'INPUT') {
+      siblingTarget.checked = true;
+      classOflastSelectedFilter = FILTERS[siblingTarget.value];
+      filterImagePreviewItem.classList.add(classOflastSelectedFilter);
+    }
+    target = target.parentElement;
+  }
+}
+
+/**
+ * Возвращает факт не соответствия введённого значения заданным
+ * пределам длины в комментарии формы.
+ *
+ * @return {boolean}
+ */
+function checkFormDescriptionOnValidTextLength() {
+
+  var result = false;
+
+  if (uploadFormDescriptionItem.textLength >= descriptionMinLength
+    && uploadFormDescriptionItem.textLength <= descriptionMaxLength) {
+    result = true;
+    return result;
+  }
+
+  return result;
 }
 
 /**
@@ -151,7 +364,6 @@ function closeFramingPopup() {
  * @param {object} evt
  */
 function openPopupClickHandler(evt) {
-  evt.preventDefault();
   openPopup(evt);
 }
 
@@ -163,10 +375,9 @@ function openPopupClickHandler(evt) {
  */
 function openPopupEnterPressHandler(evt) {
   if (evt.keyCode === KEYS.ENTER) {
-    if (evt.target.className === 'gallery-overlay-close') {
-      closePopup();
+    if (evt.target.className === 'gallery-overlay-close' && evt.target.tagname === 'span') {
+      closePopup(evt);
     }
-    evt.preventDefault();
     openPopup(evt);
   }
 }
@@ -178,7 +389,7 @@ function openPopupEnterPressHandler(evt) {
  */
 function closePopupEscPressHandler(evt) {
   if (evt.keyCode === KEYS.ESC) {
-    closePopup();
+    closePopup(evt);
   }
 }
 
@@ -189,6 +400,7 @@ function closePopupEscPressHandler(evt) {
  * @return {number}
  */
 function getPhotoId(evt) {
+
   if (evt.target.localName === 'img') {
     return evt.target.parentElement.getAttribute('data-photo-id');
   }
@@ -200,9 +412,19 @@ function getPhotoId(evt) {
  *
  * @param {object} evt
  */
-function closePopupHandler(evt) {
-  evt.preventDefault();
-  closePopup();
+function closePopupClickHandler(evt) {
+  closePopup(evt);
+}
+
+/**
+ * Обработчик, закрывающий всплывающее окно по нажатию клавиши Enter.
+ *
+ * @param {object} evt
+ */
+function closePopupEnterPressHandler(evt) {
+  if (evt.keyCode === KEYS.ENTER) {
+    closePopup(evt);
+  }
 }
 
 /**
@@ -213,20 +435,26 @@ function closePopupHandler(evt) {
 function openPopup(evt) {
 
   var photoId = getPhotoId(evt);
+
   if (photoId === null || photoId < 0) {
     return;
   }
   fillPhoto(arrayOfPhotos[photoId], galleryOverlayItem);
   galleryOverlayItem.classList.remove('invisible');
   document.addEventListener('keydown', closePopupEscPressHandler);
+
+  evt.preventDefault();
 }
 
 /**
  * Закрывает видимость элемента '.gallery-overlay'
+ *
+ * @param {object} evt
  */
-function closePopup() {
+function closePopup(evt) {
   galleryOverlayItem.classList.add('invisible');
   document.removeEventListener('keydown', closePopupEscPressHandler);
+  evt.preventDefault();
 }
 
 /**
@@ -256,41 +484,54 @@ function getRandomNumber(min, max) {
 }
 
 /**
- * Заполняет массив, содержащий адреса фотографий.
+ * Возвращает массив, содержащий адреса фотографий.
  *
  * @param {string} path
  * @param {string} extension
+ * @return {object}
  */
 function createArrayOfPhotosUrls(path, extension) {
 
+  var localArray = [];
   var photoUrl;
 
   for (var i = 1; i < PHOTOS_COUNT + 1; i++) {
 
     do {
       photoUrl = path + '/' + getRandomNumber(1, PHOTOS_COUNT) + '.' + extension;
-    } while (arrayOfPhotosUrls.indexOf(photoUrl) !== -1);
+    } while (localArray.indexOf(photoUrl) !== -1);
 
-    arrayOfPhotosUrls.push(photoUrl);
+    localArray.push(photoUrl);
   }
+
+  return localArray;
 }
 
 /**
- * Заполняет массив, содержащий случайное кол-во лайков для каждой фотографии.
+ * Возвращает массив, содержащий случайное кол-во лайков для каждой фотографии.
  *
  * @param {number} minCountLikes
  * @param {number} maxCountLikes
+ * @return {object}
  */
 function createArrayOfPhotosLikes(minCountLikes, maxCountLikes) {
+
+  var localArray = [];
+
   for (var i = 0; i < PHOTOS_COUNT; i++) {
-    arrayOfPhotosLikes.push(getRandomNumber(minCountLikes, maxCountLikes));
+    localArray.push(getRandomNumber(minCountLikes, maxCountLikes));
   }
+  return localArray;
 }
 
 /**
- * Заполняет массив, содержащий массивы со случайным кол-вом комментариев для каждой фотографии.
+ * Возвращает массив, содержащий массивы со случайным кол-вом комментариев для каждой фотографии.
+ *
+ * @return {array}
  */
 function createArrayOfPhotosComments() {
+
+  var localArray = [];
 
   for (var i = 0; i < PHOTOS_COUNT; i++) {
 
@@ -320,8 +561,10 @@ function createArrayOfPhotosComments() {
 
       arrayOfOnePhotoComments.push(jointSentence);
     }
-    arrayOfPhotosComments.push(arrayOfOnePhotoComments);
+    localArray.push(arrayOfOnePhotoComments);
   }
+
+  return localArray;
 }
 
 /**
@@ -342,12 +585,20 @@ function createPhoto(index) {
 }
 
 /**
- * Заполняет массив объектов, каждый из которого включает в себя
+ * Заполняет массив объектов, каждый из которых представляет собой
+ * фотографию.
+ *
+ * @return {object}
  */
 function createArrayOfPhotos() {
+
+  var localArray = [];
+
   for (var i = 0; i < PHOTOS_COUNT; i++) {
-    arrayOfPhotos.push(createPhoto(i));
+    localArray.push(createPhoto(i));
   }
+
+  return localArray;
 }
 
 /**
