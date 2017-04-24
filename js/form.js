@@ -93,7 +93,7 @@ window.pictures = (function () {
       }
       closeFramingPopup();
       return;
-    }    
+    }
     if (evt.currentTarget.className === 'upload-form-cancel') {
       evt.preventDefault();
       closeFramingPopup();
