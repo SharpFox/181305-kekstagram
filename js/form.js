@@ -40,14 +40,23 @@ window.pictures = (function () {
   var uploadResizeControlsValueItem = uploadForm.querySelector('.upload-resize-controls-value');
   var filterImagePreviewItem = uploadForm.querySelector('.filter-image-preview');
   var uploadFilterControlsItem = uploadItem.querySelector('.upload-filter-controls');
-  var uploadFilterLabelItem = uploadFilterControlsItem.querySelector('.upload-filter-label');
+  var uploadFilterNoneId = document.getElementById('upload-filter-none');
   var uploadFilterForm = uploadItem.querySelector('.upload-filter');
   var uploadResizeControlsBbuttonDecItem = uploadForm.querySelector('.upload-resize-controls-button-dec');
   var uploadResizeControlsBbuttonIncItem = uploadForm.querySelector('.upload-resize-controls-button-inc');
 
+  var uploadFilterLevelItem = document.querySelector('.upload-filter-level');
+  var uploadFilterLevelPinItem = uploadFilterLevelItem.querySelector('.upload-filter-level-pin');
+  var uploadFilterLevelValItem = uploadFilterLevelItem.querySelector('.upload-filter-level-val');
+  var uploadFilterLevelLineItem = uploadFilterLevelItem.querySelector('.upload-filter-level-line');
+
+  uploadFilterLevelItem.ondragstart = false;
+
   uploadResizeControlsValueItem.value = maxValueOfFrameScale + '%';
   var classOflastSelectedFilter;
   var lastSelectedFilter;
+
+  doDefaultSettingOfFilter();
 
   uploadFileItem.addEventListener('click', openFramingPopupHandler);
   uploadFileItem.addEventListener('keydown', openFramingPopupHandler);
@@ -64,6 +73,81 @@ window.pictures = (function () {
 
   uploadResizeControlsBbuttonIncItem.addEventListener('click', upScaleHandler);
   uploadResizeControlsBbuttonIncItem.addEventListener('keydown', upScaleHandler);
+
+  initializeFilters();
+
+  /**
+   * Инициализирует работу фильтра.
+   */
+  function initializeFilters() {
+
+    uploadFilterLevelPinItem.addEventListener('mousedown', function () {
+
+      var lineCoords = getCoords(uploadFilterLevelLineItem);
+
+      function moveMouseHandler(evt) {
+
+        var leftPositionOfPin = evt.pageX - lineCoords.left;
+        var currentPositionOfPin = uploadFilterLevelLineItem.offsetWidth - (uploadFilterLevelPinItem.offsetWidth / 2);
+        var percentValue = (leftPositionOfPin / currentPositionOfPin) * 100;
+
+        if (percentValue < 0) {
+          percentValue = 0;
+        } else if (percentValue > 100) {
+          percentValue = 100;
+        }
+
+        uploadFilterLevelPinItem.style.left = percentValue + '%';
+        uploadFilterLevelValItem.style.width = percentValue + '%';
+
+        applyCurrentFilterSelector(percentValue);
+      }
+
+      function upMouseHandler() {
+        document.removeEventListener('mousemove', moveMouseHandler);
+        document.removeEventListener('mouseup', upMouseHandler);
+      }
+
+      document.addEventListener('mousemove', moveMouseHandler);
+      document.addEventListener('mouseup', upMouseHandler);
+
+      return false;
+    });
+  }
+
+  /**
+   * Выбирает фильтр и степень насыщенности кадированного изображения.
+   *
+   * @param {number} percentFilterValue
+   */
+  function applyCurrentFilterSelector(percentFilterValue) {
+    if (classOflastSelectedFilter === filters.chrome) {
+      filterImagePreviewItem.style.filter = 'grayscale(' + percentFilterValue / 100 + ')';
+    } else if (classOflastSelectedFilter === filters.sepia) {
+      filterImagePreviewItem.style.filter = 'sepia(' + percentFilterValue / 100 + ')';
+    } else if (classOflastSelectedFilter === filters.marvin) {
+      filterImagePreviewItem.style.filter = 'invert(' + percentFilterValue + '%)';
+    } else if (classOflastSelectedFilter === filters.phobos) {
+      filterImagePreviewItem.style.filter = 'blur(' + (percentFilterValue / 100) * 3 + 'px)';
+    } else if (classOflastSelectedFilter === filters.heat) {
+      filterImagePreviewItem.style.filter = 'brightness(' + (percentFilterValue / 100) * 3 + ')';
+    }
+  }
+
+  /**
+   * Возвращает координаты.
+   *
+   * @param {object} elem
+   * @return {object}
+   */
+  function getCoords(elem) {
+    var coords = elem.getBoundingClientRect();
+
+    return {
+      top: coords.top + window.pageYOffset,
+      left: coords.left + window.pageXOffset
+    };
+  }
 
   /**
    * Открывает всплывающее окно кадрирования изображения по клику мыши
@@ -174,6 +258,9 @@ window.pictures = (function () {
    * @param {object} evt
    */
   function openFramingPopup(evt) {
+    if (typeof classOflastSelectedFilter === 'undefined' || classOflastSelectedFilter === filters.none) {
+      uploadFilterLevelItem.classList.add('invisible');
+    }
     uploadOverlayItem.classList.remove('invisible');
     document.addEventListener('keydown', closeFramingPopupPressEscHandler);
     evt.preventDefault();
@@ -183,17 +270,25 @@ window.pictures = (function () {
    * Закрывает видимость элемента '.upload-overlay'
    */
   function closeFramingPopup() {
+
     uploadResizeControlsValueItem.value = maxValueOfFrameScale + '%';
+
     if (typeof classOflastSelectedFilter !== 'undefined') {
       filterImagePreviewItem.classList.remove(classOflastSelectedFilter);
     }
+
+    uploadFilterLevelItem.classList.add('invisible');
+
     filterImagePreviewItem.style.transform = 'scale(1.00)';
     if (typeof lastSelectedFilter !== 'undefined') {
       lastSelectedFilter.checked = false;
     }
-    uploadFilterLabelItem.checked = true;
+    uploadFilterNoneId.checked = true;
     uploadOverlayItem.classList.add('invisible');
     uploadFormDescriptionItem.value = '';
+
+    doDefaultSettingOfFilter();
+
     document.removeEventListener('keydown', closeFramingPopupPressEscHandler);
   }
 
@@ -236,6 +331,8 @@ window.pictures = (function () {
       return;
     }
 
+    doDefaultSettingOfFilter();
+
     if (typeof classOflastSelectedFilter !== 'undefined') {
       filterImagePreviewItem.classList.remove(classOflastSelectedFilter);
     }
@@ -247,11 +344,18 @@ window.pictures = (function () {
       siblingTarget = target.previousElementSibling;
       if (siblingTarget !== null && siblingTarget.tagName === 'INPUT') {
         siblingTarget.checked = true;
+        lastSelectedFilter = siblingTarget;
         classOflastSelectedFilter = filters[siblingTarget.value];
         filterImagePreviewItem.classList.add(classOflastSelectedFilter);
       }
       target = target.parentElement;
     }
+
+    if (classOflastSelectedFilter === filters.none) {
+      uploadFilterLevelItem.classList.add('invisible');
+      return;
+    }
+    uploadFilterLevelItem.classList.remove('invisible');
   }
 
   /**
@@ -272,5 +376,15 @@ window.pictures = (function () {
 
     return result;
   }
+
+  /**
+   * Делает настройки фильтра по умолчанию.
+   */
+  function doDefaultSettingOfFilter() {
+    uploadFilterLevelValItem.style.width = '100%';
+    uploadFilterLevelPinItem.style.left = '100%';
+    filterImagePreviewItem.style.filter = '';
+  }
+
 
 })();
