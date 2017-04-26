@@ -1,4 +1,3 @@
-// gallery.js
 
 // ***********************************************
 // * РАБОТАЕТ С ГАЛЕРЕЕЙ ИЗОБРАЖЕНИЙ
@@ -6,14 +5,10 @@
 
 'use strict';
 
-window.gallery = (function () {
-
-  var KEYS = {
-    'ESC': 27,
-    'ENTER': 13
-  };
+(function () {
 
   var bodyItem = document.querySelector('body');
+  var pictureItem = bodyItem.querySelector('picture');
   var galleryOverlayItem = bodyItem.querySelector('.gallery-overlay');
   var galleryOverlayCloseItem = galleryOverlayItem.querySelector('.gallery-overlay-close');
 
@@ -33,11 +28,7 @@ window.gallery = (function () {
    * @param {object} evt
    */
   function openPopupHandler(evt) {
-    if (evt.keyCode === KEYS.ENTER) {
-      openPopup(evt);
-      return;
-    }
-    if (evt.type === 'click') {
+    if (evt.keyCode === window.utils.KEYS.ENTER || evt.type === 'click') {
       openPopup(evt);
     }
   }
@@ -49,17 +40,13 @@ window.gallery = (function () {
    * @param {object} evt
    */
   function closePopupHandler(evt) {
-    if (evt.keyCode === KEYS.ENTER) {
-      closePopup(evt);
+    if (evt.keyCode !== window.utils.KEYS.ENTER && evt.type !== 'click') {
       return;
     }
-    if (evt.target.className === 'gallery-overlay-close' && evt.target.tagname === 'span') {
-      closePopup(evt);
+    if (!window.utils.isContainClass(evt.target, 'gallery-overlay-close') && evt.target.tagName !== 'SPAN') {
       return;
     }
-    if (evt.type === 'click') {
-      closePopup(evt);
-    }
+    closePopup(evt);
   }
 
   /**
@@ -69,9 +56,8 @@ window.gallery = (function () {
    * @param {object} evt
    */
   function closePopupPressEscHandler(evt) {
-    if (evt.keyCode === KEYS.ESC) {
+    if (evt.keyCode === window.utils.KEYS.ESC) {
       closePopup(evt);
-      return;
     }
   }
 
@@ -83,11 +69,12 @@ window.gallery = (function () {
    */
   function openPopup(evt) {
 
-    var photoId = getPhotoId(evt);
+    var photoId = getPhotoId(evt.target);
 
     if (photoId === null || photoId < 0) {
       return;
     }
+
     window.preview.fillPhoto(window.data.arrayOfPhotos[photoId], galleryOverlayItem);
     galleryOverlayItem.classList.remove('invisible');
     document.addEventListener('keydown', closePopupPressEscHandler);
@@ -110,15 +97,17 @@ window.gallery = (function () {
   /**
    * Возвращает объект с данными фотографии, выделеной ранее.
    *
-   * @param {object} evt
+   * @param {object} target
    * @return {number}
    */
-  function getPhotoId(evt) {
-
-    if (evt.target.localName === 'img') {
-      return evt.target.parentElement.getAttribute('data-photo-id');
+  function getPhotoId(target) {
+    while (target !== pictureItem) {
+      if (target !== null && target.tagName === 'A') {
+        var currentPhotoId = target.getAttribute('data-photo-id');
+      }
+      target = target.parentElement;
     }
-    return evt.target.getAttribute('data-photo-id');
+    return currentPhotoId;
   }
 
   /**
@@ -133,6 +122,4 @@ window.gallery = (function () {
     }
     return window.data.arrayOfPhotos[index];
   }
-
 })();
-
