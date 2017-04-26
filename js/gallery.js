@@ -12,13 +12,44 @@
   var galleryOverlayItem = bodyItem.querySelector('.gallery-overlay');
   var galleryOverlayCloseItem = galleryOverlayItem.querySelector('.gallery-overlay-close');
 
-  window.pictures.createPhotos(window.data.arrayOfPhotos);
-  window.preview.fillPhoto(getPhotoByIndex(0), galleryOverlayItem);
+  var arrayOfPhotos;
+  var url = 'https://intensive-javascript-server-kjgvxfepjl.now.sh/kekstagram/data';
 
   bodyItem.addEventListener('click', openPopupHandler);
   bodyItem.addEventListener('keydown', openPopupHandler);
   galleryOverlayCloseItem.addEventListener('click', closePopupHandler);
   galleryOverlayCloseItem.addEventListener('keydown', closePopupHandler);
+
+  window.load(url, onLoad, onError);
+
+  /**
+   * Обрабатывает загруженный файл с данными по фотографиям.
+   *
+   * @param {string} dataFromServer
+   */
+  function onLoad(dataFromServer) {
+    arrayOfPhotos = dataFromServer;
+    window.pictures.createPhotos(arrayOfPhotos);
+  }
+
+  /**
+   * Выводит сообщение об ошибке.
+   *
+   * @param {string} answer
+   */
+  function onError(answer) {
+
+    var node = document.createElement('div');
+    node.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: #CC6633;';
+    node.style.position = 'absolute';
+    node.style.left = 0;
+    node.style.right = 0;
+    node.style.fontSize = '20px';
+    node.style.color = '#CCCCCC';
+
+    node.textContent = answer;
+    document.body.insertAdjacentElement('afterbegin', node);
+  }
 
   /**
    * Обработчик, открывающий всплывающее окно по клику
@@ -75,7 +106,7 @@
       return;
     }
 
-    window.preview.fillPhoto(window.data.arrayOfPhotos[photoId], galleryOverlayItem);
+    window.preview.fillPhoto(arrayOfPhotos[photoId], galleryOverlayItem);
     galleryOverlayItem.classList.remove('invisible');
     document.addEventListener('keydown', closePopupPressEscHandler);
 
@@ -108,18 +139,5 @@
       target = target.parentElement;
     }
     return currentPhotoId;
-  }
-
-  /**
-   * Возвращает объект с данными фотографии согласно переданному индексу.
-   *
-   * @param {number} index
-   * @return {object}
-   */
-  function getPhotoByIndex(index) {
-    if (index < 0) {
-      return window.data.arrayOfPhotos[0];
-    }
-    return window.data.arrayOfPhotos[index];
   }
 })();
