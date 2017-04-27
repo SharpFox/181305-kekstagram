@@ -1,35 +1,37 @@
-
-// ***********************************************
-// * РАБОТАЕТ С ГАЛЕРЕЕЙ ИЗОБРАЖЕНИЙ
-// ***********************************************
-
 'use strict';
 
 (function () {
 
   var bodyItem = document.querySelector('body');
-  var pictureItem = bodyItem.querySelector('picture');
+  var filtersForm = bodyItem.querySelector('.filters');
+  var pictureItem = bodyItem.querySelector('.picture');
+  var picturesItem = bodyItem.querySelector('.pictures');
   var galleryOverlayItem = bodyItem.querySelector('.gallery-overlay');
   var galleryOverlayCloseItem = galleryOverlayItem.querySelector('.gallery-overlay-close');
 
-  var arrayOfPhotos;
-  var url = 'https://intensive-javascript-server-kjgvxfepjl.now.sh/kekstagram/data';
+  var arrayOfPhotos = [];
+  var sortedArrayOfPhotos = [];
+  var URL = 'https://intensive-javascript-server-kjgvxfepjl.now.sh/kekstagram/data';
 
   bodyItem.addEventListener('click', openPopupHandler);
   bodyItem.addEventListener('keydown', openPopupHandler);
   galleryOverlayCloseItem.addEventListener('click', closePopupHandler);
   galleryOverlayCloseItem.addEventListener('keydown', closePopupHandler);
+  filtersForm.addEventListener('click', sortPhotosHandler);
+  filtersForm.addEventListener('keydown', sortPhotosHandler);
 
-  window.load(url, onLoad, onError);
+  window.load(URL, loadHandler, errorHandler);
 
   /**
    * Обрабатывает загруженный файл с данными по фотографиям.
    *
    * @param {string} dataFromServer
    */
-  function onLoad(dataFromServer) {
+  function loadHandler(dataFromServer) {
     arrayOfPhotos = dataFromServer;
+    sortedArrayOfPhotos = arrayOfPhotos;
     window.pictures.createPhotos(arrayOfPhotos);
+    filtersForm.classList.remove('hidden');
   }
 
   /**
@@ -37,7 +39,7 @@
    *
    * @param {string} answer
    */
-  function onError(answer) {
+  function errorHandler(answer) {
 
     var node = document.createElement('div');
     node.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: #CC6633;';
@@ -93,6 +95,106 @@
   }
 
   /**
+   * Выбирает тип сортировки согласно выбранному элементу.
+   *
+   * @param {object} evt
+   */
+  function sortPhotosHandler(evt) {
+    if (evt.keyCode !== window.utils.KEYS.ENTER && evt.type !== 'click') {
+      return;
+    }
+    if (evt.target.tagName !== 'INPUT') {
+      return;
+    }
+    window.utils.debounce(function () {
+      sortPhotos(evt.target.value);
+    });
+  }
+
+  /**
+   * Сортирует фотографии согласно выбранного фильтра.
+   *
+   * @param {string} filter
+   */
+  function sortPhotos(filter) {
+
+    var newPhotoFragment = window.pictures.createNewFragment();
+    picturesItem.innerHTML = null;
+
+    switch (filter) {
+      case window.utils.sortFilters.new: {
+        sortPhotosByNew(arrayOfPhotos);
+        createSortPhotos(sortedArrayOfPhotos);
+        break;
+      }
+      case window.utils.sortFilters.discussed: {
+        sortImagesByComments(arrayOfPhotos);
+        createSortPhotos(sortedArrayOfPhotos);
+        break;
+      }
+      case window.utils.sortFilters.popular: {
+        createSortPhotos(arrayOfPhotos);
+        break;
+      }
+    }
+    window.pictures.appendNewChild(newPhotoFragment);
+  }
+
+  /**
+   * Возвращает 10 различных фотографий из массива, полученного с сервера.
+   *
+   * @param {object} arrayOfElements
+   * @return {object}
+   */
+  function sortPhotosByNew(arrayOfElements) {
+    var arrayOfElementsCopy = arrayOfElements.slice();
+    sortedArrayOfPhotos = [];
+
+    for (var i = 0; i < 10; i++) {
+      var randomIndex = window.utils.getRandomArrayIndex(arrayOfElementsCopy);
+      sortedArrayOfPhotos.push(arrayOfElementsCopy[randomIndex]);
+      arrayOfElementsCopy.splice(randomIndex, 1);
+    }
+
+    return sortedArrayOfPhotos;
+  }
+
+  /**
+   * Сортирует полученный с сервера массив фотографий по количеству комментариев в порядке убывания.
+   *
+   * @param {object} arrayOfElements
+   * @return {object}
+   */
+  function sortImagesByComments(arrayOfElements) {
+
+    var arrayOfElementsCopy = arrayOfElements.slice();
+
+    arrayOfElementsCopy.sort(function (a, b) {
+      return b.comments.length - a.comments.length;
+    });
+
+    sortedArrayOfPhotos = arrayOfElementsCopy;
+    return sortedArrayOfPhotos;
+  }
+
+  /**
+   * Добавляет в разметку полученные с сервера отсортированные фотографии.
+   *
+   * @param {array} arrayOfElements
+   */
+  function createSortPhotos(arrayOfElements) {
+
+    var newPhotoFragment = window.pictures.createNewFragment();
+    var idNumber = 0;
+
+    arrayOfElements.forEach(function (photo) {
+      window.pictures.createPhoto(photo, idNumber, newPhotoFragment);
+      idNumber += 1;
+    });
+    window.pictures.appendNewChild(newPhotoFragment);
+  }
+
+  /**
    * Показывает увеличенное изображение, предварительно наполняя
    * его и удаляя класс 'invisible' у класса 'gallery-overlay'.
    *
@@ -102,11 +204,13 @@
 
     var photoId = getPhotoId(evt.target);
 
-    if (photoId === null || photoId < 0) {
+    if (photoId === null || photoId < 0 || typeof photoId === 'undefined') {
       return;
     }
 
-    window.preview.fillPhoto(arrayOfPhotos[photoId], galleryOverlayItem);
+    if (typeof sortedArrayOfPhotos !== 'undefined') {
+      window.preview.fillPhoto(sortedArrayOfPhotos[photoId], galleryOverlayItem);
+    }
     galleryOverlayItem.classList.remove('invisible');
     document.addEventListener('keydown', closePopupPressEscHandler);
 

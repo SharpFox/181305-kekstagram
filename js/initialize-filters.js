@@ -1,14 +1,9 @@
-
-// ***********************************************
-// * ПРОИЗВОДИТ ВЫБОР ФИЛЬТРА
-// ***********************************************
-
 'use strict';
 
 window.initializeFilters = (function () {
 
   var filterElement;
-  var filterFunction;
+  var applyFilter;
   var newFilter;
   var oldFilter;
 
@@ -29,7 +24,7 @@ window.initializeFilters = (function () {
     }
 
     getCurrentFilter(evt.target);
-    filterFunction(newFilter, oldFilter);
+    applyFilter(newFilter, oldFilter);
   }
 
   /**
@@ -55,9 +50,9 @@ window.initializeFilters = (function () {
   return function (element, callback) {
 
     filterElement = element;
-    filterFunction = callback;
+    applyFilter = callback;
 
-    if (typeof filterFunction !== 'function') {
+    if (typeof applyFilter !== 'function') {
       return;
     }
 

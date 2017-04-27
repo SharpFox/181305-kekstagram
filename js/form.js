@@ -1,8 +1,3 @@
-
-// ***********************************************
-// * РАБОТАЕТ С ФОРМОЙ РЕДАКТИРОВАНИЯ ИЗОБРАЖЕНИЯ
-// ***********************************************
-
 'use strict';
 
 (function () {
@@ -30,6 +25,7 @@
   uploadFilterLevelItem.ondragstart = false;
   var lastFilter;
   var setepScaleValueForFramingPhoto = 25;
+
 
   doDefaultSettingsOfFilter();
 
@@ -138,11 +134,16 @@
     }
     if (window.utils.isContainClass(evt.currentTarget, 'upload-form-cancel')) {
       evt.preventDefault();
+      uploadFormDescriptionItem.removeEventListener('keydown', checkFormDescriptionHandler);
       closeFramingPopup();
-    }
-    if (!uploadFormDescriptionItem.checkValidity()) {
       return;
     }
+    if (!uploadFormDescriptionItem.checkValidity()) {
+      uploadFormDescriptionItem.addEventListener('keydown', checkFormDescriptionHandler);
+      setRedFrameForDescription();
+      return;
+    }
+    uploadFormDescriptionItem.removeEventListener('keydown', checkFormDescriptionHandler);
     evt.preventDefault();
     closeFramingPopup();
   }
@@ -156,8 +157,24 @@
   function closeFramingPopupPressEscHandler(evt) {
     if (evt.keyCode === window.utils.KEYS.ESC) {
       if (!window.utils.isContainClass(evt.target, 'upload-form-description') && evt.target.tagName !== 'TEXTAREA') {
+        uploadFormDescriptionItem.removeEventListener('keydown', checkFormDescriptionHandler);
         closeFramingPopup();
       }
+    }
+  }
+
+  /**
+   * Контролирует ввод комментария.
+   *
+   * @param {object} evt
+   */
+  function checkFormDescriptionHandler(evt) {
+    if (evt.type === 'keydown' && evt.keyCode !== window.utils.KEYS.ESC) {
+      if (!uploadFormDescriptionItem.checkValidity()) {
+        setRedFrameForDescription();
+        return;
+      }
+      setGreenFrameForDescription();
     }
   }
 
@@ -179,6 +196,7 @@
    * Закрывает форму кадрирования фотографии.
    */
   function closeFramingPopup() {
+
     doDefaultSettingsOfFilter();
     document.removeEventListener('keydown', closeFramingPopupPressEscHandler);
   }
@@ -191,6 +209,29 @@
   function changeScale(currentScale) {
     filterImagePreviewItem.style.transform = 'scale(' + currentScale * 0.01 + ')';
   }
+
+
+  /**
+   * Выставляет границу вокркуг рамкм зеленого цвета.
+   */
+  function setGreenFrameForDescription() {
+    uploadFormDescriptionItem.setAttribute('style', 'border: 3px green solid');
+  }
+
+  /**
+   * Выставляет границу вокркуг рамкм красного цвета.
+   */
+  function setRedFrameForDescription() {
+    uploadFormDescriptionItem.setAttribute('style', 'border: 2px red solid');
+  }
+
+  /**
+   * Выставляет границу вокркуг рамкм синеватого цвета (#333399).
+   */
+  function setBlueFrameForDescription() {
+    uploadFormDescriptionItem.setAttribute('style', 'border: 3px #333399 solid');
+  }
+
 
   /**
    * Применяет новый фильтр, при необходимости удаляя старый.
@@ -214,11 +255,14 @@
    * Задает настройки формы кадрирования изображения по умолчанию.
    */
   function doDefaultSettingsOfFilter() {
+
     doDefaultSettingsOfFulterForScroll();
 
     uploadOverlayItem.classList.add('invisible');
     uploadFormDescriptionItem.value = '';
     uploadFilterNoneId.checked = true;
+
+    setBlueFrameForDescription();
 
     if (typeof lastFilter !== 'undefined') {
       filterImagePreviewItem.classList.remove(lastFilter);
@@ -241,8 +285,8 @@
 
     if (lastFilter === window.utils.filters.none) {
       uploadFilterLevelItem.classList.add('invisible');
-    } else {
-      uploadFilterLevelItem.classList.remove('invisible');
+      return;
     }
+    uploadFilterLevelItem.classList.remove('invisible');
   }
 })();
