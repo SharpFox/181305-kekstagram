@@ -1,4 +1,3 @@
-// picture.js
 
 // ***********************************************
 // * ОТРИСОВЫВАЕТ МИНИАТЮРУ
@@ -12,7 +11,25 @@ window.pictures = (function () {
   var pictureTemplate = document.querySelector('#picture-template').content;
 
   /**
-   * Создаёт новую фотографию из шаблона, заполняя её свойства.
+   * Возвращает новосозданный фрагмент.
+   *
+   * @return {object}
+   */
+  function createNewFragment() {
+    return document.createDocumentFragment();
+  }
+
+  /**
+   * Добавляет нового ребенка в '.pictures'.
+   *
+   * @param {object} newPhotoFrigment
+   */
+  function appendNewChild(newPhotoFrigment) {
+    picturesItem.appendChild(newPhotoFrigment);
+  }
+
+  /**
+   * Создаёт новые фотографии из шаблона, заполняя её свойства.
    *
    * @param {array} arrayOfPhotos
    */
@@ -22,27 +39,42 @@ window.pictures = (function () {
       return;
     }
 
-    var newPhoto = document.createDocumentFragment();
+    var newPhotoFragment = createNewFragment();
 
-    for (var i = 0; i < arrayOfPhotos.length; i++) {
+    var length = arrayOfPhotos.length;
 
-      var pictureTemplateItem = pictureTemplate.cloneNode(true);
-
-      pictureTemplateItem.querySelector('.picture').setAttribute('tabindex', 0);
-      pictureTemplateItem.querySelector('.picture').setAttribute('data-photo-id', i);
-
-      pictureTemplateItem.querySelector('img').src = arrayOfPhotos[i].url;
-      pictureTemplateItem.querySelector('.picture-likes').textContent = arrayOfPhotos[i].likes;
-      pictureTemplateItem.querySelector('.picture-comments').textContent = arrayOfPhotos[i].comments.length;
-
-      newPhoto.appendChild(pictureTemplateItem);
+    for (var i = 0; i < length; i++) {
+      createPhoto(arrayOfPhotos[i], i, newPhotoFragment);
     }
 
-    picturesItem.appendChild(newPhoto);
+    appendNewChild(newPhotoFragment);
+  }
+
+
+  /**
+   * Возвращает фрагмент, заполненный новой фотографией.
+   *
+   * @param {object} photo
+   * @param {number} idNumber
+   * @param {object} newPhotoFragment
+   */
+  function createPhoto(photo, idNumber, newPhotoFragment) {
+
+    var pictureTemplateItem = pictureTemplate.cloneNode(true);
+
+    pictureTemplateItem.querySelector('.picture').setAttribute('tabindex', 0);
+    pictureTemplateItem.querySelector('.picture').setAttribute('data-photo-id', idNumber);
+
+    pictureTemplateItem.querySelector('img').src = photo.url;
+    pictureTemplateItem.querySelector('.picture-likes').textContent = photo.likes;
+    pictureTemplateItem.querySelector('.picture-comments').textContent = photo.comments.length;
+
+    newPhotoFragment.appendChild(pictureTemplateItem);
   }
 
   return {
-    'createPhotos': createPhotos
+    'createPhotos': createPhotos,
+    'createPhoto': createPhoto
   };
 
 })();

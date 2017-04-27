@@ -1,4 +1,3 @@
-// form.js
 
 // ***********************************************
 // * РАБОТАЕТ С ФОРМОЙ РЕДАКТИРОВАНИЯ ИЗОБРАЖЕНИЯ
@@ -6,29 +5,7 @@
 
 'use strict';
 
-window.pictures = (function () {
-
-  var KEYS = {
-    'ESC': 27,
-    'ENTER': 13
-  };
-
-  var filters = {
-    'none': 'filter-none',
-    'chrome': 'filter-chrome',
-    'sepia': 'filter-sepia',
-    'marvin': 'filter-marvin',
-    'phobos': 'filter-phobos',
-    'heat': 'filter-heat',
-  };
-
-  var stepValueOfFrameScale = 25;
-  var minValueOfFrameScale = 25;
-  var maxValueOfFrameScale = 100;
-  var currentValueOfFrameScale = 100;
-
-  var descriptionMinLength = 30;
-  var descriptionMaxLength = 100;
+(function () {
 
   var uploadItem = document.querySelector('.upload');
   var uploadFileItem = uploadItem.querySelector('.upload-file');
@@ -37,13 +14,13 @@ window.pictures = (function () {
   var uploadFormCancelItem = uploadForm.querySelector('.upload-form-cancel');
   var uploadSubmitItem = uploadForm.querySelector('.upload-form-submit');
   var uploadFormDescriptionItem = uploadForm.querySelector('.upload-form-description');
-  var uploadResizeControlsValueItem = uploadForm.querySelector('.upload-resize-controls-value');
+  var uploadFilter = uploadItem.querySelector('.upload-filter');
+
+  var uploadResizeControlsItem = uploadForm.querySelector('.upload-resize-controls');
+  var uploadResizeControlsValueItem = uploadResizeControlsItem.querySelector('.upload-resize-controls-value');
+
   var filterImagePreviewItem = uploadForm.querySelector('.filter-image-preview');
-  var uploadFilterControlsItem = uploadItem.querySelector('.upload-filter-controls');
   var uploadFilterNoneId = document.getElementById('upload-filter-none');
-  var uploadFilterForm = uploadItem.querySelector('.upload-filter');
-  var uploadResizeControlsBbuttonDecItem = uploadForm.querySelector('.upload-resize-controls-button-dec');
-  var uploadResizeControlsBbuttonIncItem = uploadForm.querySelector('.upload-resize-controls-button-inc');
 
   var uploadFilterLevelItem = document.querySelector('.upload-filter-level');
   var uploadFilterLevelPinItem = uploadFilterLevelItem.querySelector('.upload-filter-level-pin');
@@ -51,12 +28,10 @@ window.pictures = (function () {
   var uploadFilterLevelLineItem = uploadFilterLevelItem.querySelector('.upload-filter-level-line');
 
   uploadFilterLevelItem.ondragstart = false;
+  var lastFilter;
+  var setepScaleValueForFramingPhoto = 25;
 
-  uploadResizeControlsValueItem.value = maxValueOfFrameScale + '%';
-  var classOflastSelectedFilter;
-  var lastSelectedFilter;
-
-  doDefaultSettingOfFilter();
+  doDefaultSettingsOfFilter();
 
   uploadFileItem.addEventListener('click', openFramingPopupHandler);
   uploadFileItem.addEventListener('keydown', openFramingPopupHandler);
@@ -65,19 +40,13 @@ window.pictures = (function () {
   uploadSubmitItem.addEventListener('click', closeFramingPopupHandler);
   uploadSubmitItem.addEventListener('keydown', closeFramingPopupHandler);
 
-  uploadFilterForm.addEventListener('click', choiceFilterHandler);
-  uploadFilterForm.addEventListener('keydown', choiceFilterHandler);
-
-  uploadResizeControlsBbuttonDecItem.addEventListener('click', downScaleHandler);
-  uploadResizeControlsBbuttonDecItem.addEventListener('keydown', downScaleHandler);
-
-  uploadResizeControlsBbuttonIncItem.addEventListener('click', upScaleHandler);
-  uploadResizeControlsBbuttonIncItem.addEventListener('keydown', upScaleHandler);
+  window.initializeScale(uploadResizeControlsItem, setepScaleValueForFramingPhoto, window.utils.SCALE_VALUES.MAX, changeScale);
+  window.initializeFilters(uploadFilter, applyFilter);
 
   initializeFilters();
 
   /**
-   * Инициализирует работу фильтра.
+   * Инициализирует изменение насыщенности примененного к фотографии фильтра.
    */
   function initializeFilters() {
 
@@ -91,11 +60,8 @@ window.pictures = (function () {
         var currentPositionOfPin = uploadFilterLevelLineItem.offsetWidth - (uploadFilterLevelPinItem.offsetWidth / 2);
         var percentValue = (leftPositionOfPin / currentPositionOfPin) * 100;
 
-        if (percentValue < 0) {
-          percentValue = 0;
-        } else if (percentValue > 100) {
-          percentValue = 100;
-        }
+        percentValue = (percentValue < 0) ? 0 : percentValue;
+        percentValue = (percentValue > 100) ? 100 : percentValue;
 
         uploadFilterLevelPinItem.style.left = percentValue + '%';
         uploadFilterLevelValItem.style.width = percentValue + '%';
@@ -116,21 +82,21 @@ window.pictures = (function () {
   }
 
   /**
-   * Выбирает фильтр и степень насыщенности кадированного изображения.
+   * Выбирает фильтр и степень насыщенности кадированной фотографии.
    *
    * @param {number} percentFilterValue
    */
   function applyCurrentFilterSelector(percentFilterValue) {
-    if (classOflastSelectedFilter === filters.chrome) {
-      filterImagePreviewItem.style.filter = 'grayscale(' + percentFilterValue / 100 + ')';
-    } else if (classOflastSelectedFilter === filters.sepia) {
-      filterImagePreviewItem.style.filter = 'sepia(' + percentFilterValue / 100 + ')';
-    } else if (classOflastSelectedFilter === filters.marvin) {
-      filterImagePreviewItem.style.filter = 'invert(' + percentFilterValue + '%)';
-    } else if (classOflastSelectedFilter === filters.phobos) {
-      filterImagePreviewItem.style.filter = 'blur(' + (percentFilterValue / 100) * 3 + 'px)';
-    } else if (classOflastSelectedFilter === filters.heat) {
-      filterImagePreviewItem.style.filter = 'brightness(' + (percentFilterValue / 100) * 3 + ')';
+    switch (lastFilter) {
+      case window.utils.filters.chrome: filterImagePreviewItem.style.filter = 'grayscale(' + percentFilterValue / 100 + ')';
+        break;
+      case window.utils.filters.sepia: filterImagePreviewItem.style.filter = 'sepia(' + percentFilterValue / 100 + ')';
+        break;
+      case window.utils.filters.marvin: filterImagePreviewItem.style.filter = 'invert(' + percentFilterValue + '%)';
+        break;
+      case window.utils.filters.phobos: filterImagePreviewItem.style.filter = 'blur(' + (percentFilterValue / 100) * 3 + 'px)';
+        break;
+      case window.utils.filters.heat: filterImagePreviewItem.style.filter = 'brightness(' + (percentFilterValue / 100) * 3 + ')';
     }
   }
 
@@ -150,241 +116,133 @@ window.pictures = (function () {
   }
 
   /**
-   * Открывает всплывающее окно кадрирования изображения по клику мыши
+   * Открывает окно кадрирования фотографии по клику мыши
    * или по нажатию на клавишу ENTER.
    *
    * @param {object} evt
    */
   function openFramingPopupHandler(evt) {
-    if (evt.keyCode === KEYS.ENTER) {
-      openFramingPopup(evt);
-      return;
-    }
-    if (evt.type === 'click') {
+    if (evt.keyCode === window.utils.KEYS.ENTER || evt.type === 'click') {
       openFramingPopup(evt);
     }
   }
 
   /**
-   * Закрывает всплывающее окно кадрирования изображения по клику мыши.
+   * Закрывает окно кадрирования фотографии по клику мыши.
    *
    * @param {object} evt
    */
   function closeFramingPopupHandler(evt) {
-    if (evt.keyCode === KEYS.ENTER) {
-      if (uploadFormDescriptionItem.validity.valueMissing || checkFormDescriptionOnValidTextLength()) {
-        return;
-      }
-      closeFramingPopup();
+    if (evt.keyCode !== window.utils.KEYS.ENTER && evt.type !== 'click') {
       return;
     }
-    if (evt.currentTarget.className === 'upload-form-cancel') {
+    if (window.utils.isContainClass(evt.currentTarget, 'upload-form-cancel')) {
       evt.preventDefault();
       closeFramingPopup();
+    }
+    if (!uploadFormDescriptionItem.checkValidity()) {
       return;
     }
-    if (uploadFormDescriptionItem.validity.valueMissing || !checkFormDescriptionOnValidTextLength()) {
-      return;
-    }
-    if (evt.type === 'click') {
-      closeFramingPopup();
-    }
+    evt.preventDefault();
+    closeFramingPopup();
   }
 
     /**
-   * Закрывает всплывающее окно кадрирования изображения по нажатию
+   * Закрывает окно кадрирования фотографии по нажатию
    * клавиши ESC.
    *
    * @param {object} evt
    */
   function closeFramingPopupPressEscHandler(evt) {
-    if (evt.keyCode === KEYS.ESC) {
-      if (evt.target.className === 'upload-form-description' && evt.target.tagName === 'TEXTAREA') {
-        return;
+    if (evt.keyCode === window.utils.KEYS.ESC) {
+      if (!window.utils.isContainClass(evt.target, 'upload-form-description') && evt.target.tagName !== 'TEXTAREA') {
+        closeFramingPopup();
       }
-      closeFramingPopup();
     }
   }
 
   /**
-   * Выставляет новый фильтр по клику мыши.
+   * Открывает форму кадрирования фотографии.
    *
-   * @param {object} evt
+   * @param {object} currentEvent
    */
-  function choiceFilterHandler(evt) {
-    if (evt.keyCode === KEYS.ENTER) {
-      doNewFilter(evt);
-      return;
-    }
-    if (evt.type === 'click') {
-      doNewFilter(evt);
-    }
-  }
-
-  /**
-   * Передаёт управление по нажатию клавиши ENTER или
-   * клику методу по уменьшению масштаба загружаемого изображения.
-   *
-   * @param {object} evt
-   */
-  function downScaleHandler(evt) {
-    if (evt.keyCode === KEYS.ENTER) {
-      downScale(evt);
-    }
-    if (evt.type === 'click') {
-      downScale(evt);
-    }
-  }
-
-  /**
-   * Передаёт управление по нажатию на клавишу ENTER или
-   * по клику методу по увеличению масштаба
-   * загружаемого изображения.
-   *
-   * @param {object} evt
-   */
-  function upScaleHandler(evt) {
-    if (evt.keyCode === KEYS.ENTER) {
-      upScale(evt);
-    }
-    if (evt.type === 'click') {
-      upScale(evt);
-    }
-  }
-
-  /**
-   * Открывает видимость элемента '.upload-overlay'
-   *
-   * @param {object} evt
-   */
-  function openFramingPopup(evt) {
-    if (typeof classOflastSelectedFilter === 'undefined' || classOflastSelectedFilter === filters.none) {
+  function openFramingPopup(currentEvent) {
+    if (typeof lastFilter === 'undefined' || lastFilter === window.utils.filters.none) {
       uploadFilterLevelItem.classList.add('invisible');
     }
     uploadOverlayItem.classList.remove('invisible');
     document.addEventListener('keydown', closeFramingPopupPressEscHandler);
-    evt.preventDefault();
+    currentEvent.preventDefault();
   }
 
   /**
-   * Закрывает видимость элемента '.upload-overlay'
+   * Закрывает форму кадрирования фотографии.
    */
   function closeFramingPopup() {
-
-    uploadResizeControlsValueItem.value = maxValueOfFrameScale + '%';
-
-    if (typeof classOflastSelectedFilter !== 'undefined') {
-      filterImagePreviewItem.classList.remove(classOflastSelectedFilter);
-    }
-
-    uploadFilterLevelItem.classList.add('invisible');
-
-    filterImagePreviewItem.style.transform = 'scale(1.00)';
-    if (typeof lastSelectedFilter !== 'undefined') {
-      lastSelectedFilter.checked = false;
-    }
-    uploadFilterNoneId.checked = true;
-    uploadOverlayItem.classList.add('invisible');
-    uploadFormDescriptionItem.value = '';
-
-    doDefaultSettingOfFilter();
-
+    doDefaultSettingsOfFilter();
     document.removeEventListener('keydown', closeFramingPopupPressEscHandler);
   }
 
   /**
-   * Увеличивает масштаб выбранного изображения.
+   * Редактирует масштаб фотографии.
    *
-   * @param {object} evt
+   * @param {number} currentScale
    */
-  function upScale(evt) {
-    if (uploadResizeControlsValueItem.value === maxValueOfFrameScale + '%') {
-      return;
-    }
-    currentValueOfFrameScale = currentValueOfFrameScale + stepValueOfFrameScale;
-    uploadResizeControlsValueItem.value = currentValueOfFrameScale + '%';
-    filterImagePreviewItem.style.transform = 'scale(' + currentValueOfFrameScale * 0.01 + ')';
+  function changeScale(currentScale) {
+    filterImagePreviewItem.style.transform = 'scale(' + currentScale * 0.01 + ')';
   }
 
   /**
-   * Уменьшает масштаб выбранного изображения.
+   * Применяет новый фильтр, при необходимости удаляя старый.
    *
-   * @param {object} evt
+   * @param {string} newFilter
+   * @param {string} oldFilter
    */
-  function downScale(evt) {
-    if (uploadResizeControlsValueItem.value === minValueOfFrameScale + '%') {
-      return;
+  function applyFilter(newFilter, oldFilter) {
+
+    lastFilter = newFilter;
+
+    if (typeof oldFilter !== 'undefined') {
+      filterImagePreviewItem.classList.remove(oldFilter);
     }
-    currentValueOfFrameScale = currentValueOfFrameScale - stepValueOfFrameScale;
-    uploadResizeControlsValueItem.value = currentValueOfFrameScale + '%';
-    filterImagePreviewItem.style.transform = 'scale(' + currentValueOfFrameScale * 0.01 + ')';
+    filterImagePreviewItem.classList.add(newFilter);
+
+    doDefaultSettingsOfFulterForScroll();
   }
 
   /**
-   * Выставляет новый фильтр, при необходимости удаляя старый.
-   *
-   * @param {object} evt
+   * Задает настройки формы кадрирования изображения по умолчанию.
    */
-  function doNewFilter(evt) {
+  function doDefaultSettingsOfFilter() {
+    doDefaultSettingsOfFulterForScroll();
 
-    if (evt.target.className !== 'upload-filter-preview' && evt.target.tagName !== 'LABEL') {
-      return;
+    uploadOverlayItem.classList.add('invisible');
+    uploadFormDescriptionItem.value = '';
+    uploadFilterNoneId.checked = true;
+
+    if (typeof lastFilter !== 'undefined') {
+      filterImagePreviewItem.classList.remove(lastFilter);
     }
-
-    doDefaultSettingOfFilter();
-
-    if (typeof classOflastSelectedFilter !== 'undefined') {
-      filterImagePreviewItem.classList.remove(classOflastSelectedFilter);
-    }
-
-    var target = evt.target;
-    var siblingTarget;
-
-    while (target !== uploadFilterControlsItem) {
-      siblingTarget = target.previousElementSibling;
-      if (siblingTarget !== null && siblingTarget.tagName === 'INPUT') {
-        siblingTarget.checked = true;
-        lastSelectedFilter = siblingTarget;
-        classOflastSelectedFilter = filters[siblingTarget.value];
-        filterImagePreviewItem.classList.add(classOflastSelectedFilter);
-      }
-      target = target.parentElement;
-    }
-
-    if (classOflastSelectedFilter === filters.none) {
-      uploadFilterLevelItem.classList.add('invisible');
-      return;
-    }
-    uploadFilterLevelItem.classList.remove('invisible');
+    uploadFilterLevelItem.classList.add('invisible');
   }
 
   /**
-   * Возвращает факт не соответствия введённого значения заданным
-   * пределам длины в комментарии формы.
-   *
-   * @return {boolean}
+   * Задает необходимые настройки формы кадрирования изображения по умолчанию,
+   * если был использован скролл.
    */
-  function checkFormDescriptionOnValidTextLength() {
-
-    var result = false;
-
-    if (uploadFormDescriptionItem.textLength >= descriptionMinLength
-      && uploadFormDescriptionItem.textLength <= descriptionMaxLength) {
-      result = true;
-      return result;
-    }
-
-    return result;
-  }
-
-  /**
-   * Делает настройки фильтра по умолчанию.
-   */
-  function doDefaultSettingOfFilter() {
+  function doDefaultSettingsOfFulterForScroll() {
+    filterImagePreviewItem.style.transform = 'scale(1.00)';
+    uploadResizeControlsValueItem.value = window.utils.SCALE_VALUES.MAX + '%';
     uploadFilterLevelValItem.style.width = '100%';
     uploadFilterLevelPinItem.style.left = '100%';
     filterImagePreviewItem.style.filter = '';
+
+    window.initializeScale(uploadResizeControlsItem, setepScaleValueForFramingPhoto, window.utils.SCALE_VALUES.MAX, changeScale);
+
+    if (lastFilter === window.utils.filters.none) {
+      uploadFilterLevelItem.classList.add('invisible');
+    } else {
+      uploadFilterLevelItem.classList.remove('invisible');
+    }
   }
-
-
 })();
