@@ -74,7 +74,9 @@ window.pictures = (function () {
 
   return {
     'createPhotos': createPhotos,
-    'createPhoto': createPhoto
+    'createPhoto': createPhoto,
+    'createNewFragment': createNewFragment,
+    'appendNewChild': appendNewChild
   };
 
 })();
