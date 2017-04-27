@@ -1,8 +1,3 @@
-
-// ***********************************************
-// * РАБОТАЕТ С ГАЛЕРЕЕЙ ИЗОБРАЖЕНИЙ
-// ***********************************************
-
 'use strict';
 
 (function () {
@@ -16,8 +11,7 @@
 
   var arrayOfPhotos = [];
   var sortedArrayOfPhotos = [];
-  var url = 'https://intensive-javascript-server-kjgvxfepjl.now.sh/kekstagram/data';
-  var lastTimeout;
+  var URL = 'https://intensive-javascript-server-kjgvxfepjl.now.sh/kekstagram/data';
 
   bodyItem.addEventListener('click', openPopupHandler);
   bodyItem.addEventListener('keydown', openPopupHandler);
@@ -26,15 +20,16 @@
   filtersForm.addEventListener('click', sortPhotosHandler);
   filtersForm.addEventListener('keydown', sortPhotosHandler);
 
-  window.load(url, onLoad, onError);
+  window.load(URL, loadHandler, errorHandler);
 
   /**
    * Обрабатывает загруженный файл с данными по фотографиям.
    *
    * @param {string} dataFromServer
    */
-  function onLoad(dataFromServer) {
+  function loadHandler(dataFromServer) {
     arrayOfPhotos = dataFromServer;
+    sortedArrayOfPhotos = arrayOfPhotos;
     window.pictures.createPhotos(arrayOfPhotos);
     filtersForm.classList.remove('hidden');
   }
@@ -44,7 +39,7 @@
    *
    * @param {string} answer
    */
-  function onError(answer) {
+  function errorHandler(answer) {
 
     var node = document.createElement('div');
     node.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: #CC6633;';
@@ -111,7 +106,7 @@
     if (evt.target.tagName !== 'INPUT') {
       return;
     }
-    debounce(function () {
+    window.utils.debounce(function () {
       sortPhotos(evt.target.value);
     });
   }
@@ -148,17 +143,17 @@
   /**
    * Возвращает 10 различных фотографий из массива, полученного с сервера.
    *
-   * @param {object} currentArray
+   * @param {object} arrayOfElements
    * @return {object}
    */
-  function sortPhotosByNew(currentArray) {
-    var currentArrayCopy = currentArray.slice();
+  function sortPhotosByNew(arrayOfElements) {
+    var arrayOfElementsCopy = arrayOfElements.slice();
     sortedArrayOfPhotos = [];
 
     for (var i = 0; i < 10; i++) {
-      var randomIndex = window.utils.getRandomArrayIndex(currentArrayCopy);
-      sortedArrayOfPhotos.push(currentArrayCopy[randomIndex]);
-      currentArrayCopy.splice(randomIndex, 1);
+      var randomIndex = window.utils.getRandomArrayIndex(arrayOfElementsCopy);
+      sortedArrayOfPhotos.push(arrayOfElementsCopy[randomIndex]);
+      arrayOfElementsCopy.splice(randomIndex, 1);
     }
 
     return sortedArrayOfPhotos;
@@ -167,48 +162,36 @@
   /**
    * Сортирует полученный с сервера массив фотографий по количеству комментариев в порядке убывания.
    *
-   * @param {object} currentArray
+   * @param {object} arrayOfElements
    * @return {object}
    */
-  function sortImagesByComments(currentArray) {
+  function sortImagesByComments(arrayOfElements) {
 
-    var currentArrayCopy = currentArray.slice();
+    var arrayOfElementsCopy = arrayOfElements.slice();
 
-    currentArrayCopy.sort(function (a, b) {
+    arrayOfElementsCopy.sort(function (a, b) {
       return b.comments.length - a.comments.length;
     });
 
-    sortedArrayOfPhotos = currentArrayCopy;
+    sortedArrayOfPhotos = arrayOfElementsCopy;
     return sortedArrayOfPhotos;
   }
 
   /**
    * Добавляет в разметку полученные с сервера отсортированные фотографии.
    *
-   * @param {array} currentPhotosArray
+   * @param {array} arrayOfElements
    */
-  function createSortPhotos(currentPhotosArray) {
+  function createSortPhotos(arrayOfElements) {
 
     var newPhotoFragment = window.pictures.createNewFragment();
     var idNumber = 0;
 
-    currentPhotosArray.forEach(function (photo) {
+    arrayOfElements.forEach(function (photo) {
       window.pictures.createPhoto(photo, idNumber, newPhotoFragment);
       idNumber += 1;
     });
     window.pictures.appendNewChild(newPhotoFragment);
-  }
-
-  /**
-   * Превратить несколько вызовов функции в течение определенного времени в один вызов.
-   *
-   * @param {function} func
-   */
-  function debounce(func) {
-    if (lastTimeout) {
-      window.clearTimeout(lastTimeout);
-    }
-    lastTimeout = window.setTimeout(func, 500);
   }
 
   /**
@@ -225,8 +208,8 @@
       return;
     }
 
-    if (typeof arrayOfPhotos !== 'undefined') {
-      window.preview.fillPhoto(arrayOfPhotos[photoId], galleryOverlayItem);
+    if (typeof sortedArrayOfPhotos !== 'undefined') {
+      window.preview.fillPhoto(sortedArrayOfPhotos[photoId], galleryOverlayItem);
     }
     galleryOverlayItem.classList.remove('invisible');
     document.addEventListener('keydown', closePopupPressEscHandler);

@@ -1,8 +1,3 @@
-
-// **************************************************
-// * СОДЕРЖИТ ЗНАЧЕНИЯ ЧАСТО ИСПОЛЬЗУЕМЫХ ПЕРЕМЕННЫХ
-// **************************************************
-
 'use strict';
 
 window.utils = (function () {
@@ -31,6 +26,8 @@ window.utils = (function () {
     'MIN': 25,
     'MAX': 100
   };
+
+  var lastTimeout;
 
   return {
     'KEYS': KEYS,
@@ -65,11 +62,23 @@ window.utils = (function () {
     /**
      * Возвращает случайный индекс элемента массива.
      *
-     * @param {array} currentArray
+     * @param {array} arrayOfElements
      * @return {number}
      */
-    'getRandomArrayIndex': function (currentArray) {
-      return Math.floor(Math.random() * currentArray.length);
+    'getRandomArrayIndex': function (arrayOfElements) {
+      return Math.floor(Math.random() * arrayOfElements.length);
+    },
+
+    /**
+     * Превращает несколько вызовов функции в течение определенного времени в один вызов.
+     *
+     * @param {function} func
+     */
+    'debounce': function (func) {
+      if (typeof lastTimeout !== 'undefined' || typeof lastTimeout === 'number') {
+        window.clearTimeout(lastTimeout);
+      }
+      lastTimeout = window.setTimeout(func, 500);
     }
   };
 })();

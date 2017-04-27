@@ -1,8 +1,3 @@
-
-// ***********************************************
-// * РАБОТАЕТ С ФОРМОЙ РЕДАКТИРОВАНИЯ ИЗОБРАЖЕНИЯ
-// ***********************************************
-
 'use strict';
 
 (function () {
@@ -40,8 +35,6 @@
   uploadFormCancelItem.addEventListener('click', closeFramingPopupHandler);
   uploadSubmitItem.addEventListener('click', closeFramingPopupHandler);
   uploadSubmitItem.addEventListener('keydown', closeFramingPopupHandler);
-
-  uploadFormDescriptionItem.addEventListener('keydown', checkFormDescriptionHandler);
 
   window.initializeScale(uploadResizeControlsItem, setepScaleValueForFramingPhoto, window.utils.SCALE_VALUES.MAX, changeScale);
   window.initializeFilters(uploadFilter, applyFilter);
@@ -141,11 +134,16 @@
     }
     if (window.utils.isContainClass(evt.currentTarget, 'upload-form-cancel')) {
       evt.preventDefault();
+      uploadFormDescriptionItem.removeEventListener('keydown', checkFormDescriptionHandler);
       closeFramingPopup();
-    }
-    if (!checkFormSubmit()) {
       return;
     }
+    if (!uploadFormDescriptionItem.checkValidity()) {
+      uploadFormDescriptionItem.addEventListener('keydown', checkFormDescriptionHandler);
+      setRedFrameForDescription();
+      return;
+    }
+    uploadFormDescriptionItem.removeEventListener('keydown', checkFormDescriptionHandler);
     evt.preventDefault();
     closeFramingPopup();
   }
@@ -159,6 +157,7 @@
   function closeFramingPopupPressEscHandler(evt) {
     if (evt.keyCode === window.utils.KEYS.ESC) {
       if (!window.utils.isContainClass(evt.target, 'upload-form-description') && evt.target.tagName !== 'TEXTAREA') {
+        uploadFormDescriptionItem.removeEventListener('keydown', checkFormDescriptionHandler);
         closeFramingPopup();
       }
     }
@@ -170,8 +169,12 @@
    * @param {object} evt
    */
   function checkFormDescriptionHandler(evt) {
-    if (evt.type === 'keydown') {
-      checkFormSubmit();
+    if (evt.type === 'keydown' && evt.keyCode !== window.utils.KEYS.ESC) {
+      if (!uploadFormDescriptionItem.checkValidity()) {
+        setRedFrameForDescription();
+        return;
+      }
+      setGreenFrameForDescription();
     }
   }
 
@@ -207,21 +210,28 @@
     filterImagePreviewItem.style.transform = 'scale(' + currentScale * 0.01 + ')';
   }
 
+
   /**
-   * Возвращает факт успешности проверки формы на валидность.
-   *
-   * @return {boolean}
+   * Выставляет границу вокркуг рамкм зеленого цвета.
    */
-  function checkFormSubmit() {
-
-    if (uploadFormDescriptionItem.checkValidity()) {
-      uploadFormDescriptionItem.setAttribute('style', 'border: 3px green solid');
-      return true;
-    }
-
-    uploadFormDescriptionItem.setAttribute('style', 'border: 2px red solid');
-    return false;
+  function setGreenFrameForDescription() {
+    uploadFormDescriptionItem.setAttribute('style', 'border: 3px green solid');
   }
+
+  /**
+   * Выставляет границу вокркуг рамкм красного цвета.
+   */
+  function setRedFrameForDescription() {
+    uploadFormDescriptionItem.setAttribute('style', 'border: 2px red solid');
+  }
+
+  /**
+   * Выставляет границу вокркуг рамкм синеватого цвета (#333399).
+   */
+  function setBlueFrameForDescription() {
+    uploadFormDescriptionItem.setAttribute('style', 'border: 3px #333399 solid');
+  }
+
 
   /**
    * Применяет новый фильтр, при необходимости удаляя старый.
@@ -245,13 +255,14 @@
    * Задает настройки формы кадрирования изображения по умолчанию.
    */
   function doDefaultSettingsOfFilter() {
+
     doDefaultSettingsOfFulterForScroll();
 
     uploadOverlayItem.classList.add('invisible');
     uploadFormDescriptionItem.value = '';
     uploadFilterNoneId.checked = true;
 
-    uploadFormDescriptionItem.setAttribute('style', 'border: 3px #333399 solid');
+    setBlueFrameForDescription();
 
     if (typeof lastFilter !== 'undefined') {
       filterImagePreviewItem.classList.remove(lastFilter);
@@ -274,8 +285,8 @@
 
     if (lastFilter === window.utils.filters.none) {
       uploadFilterLevelItem.classList.add('invisible');
-    } else {
-      uploadFilterLevelItem.classList.remove('invisible');
+      return;
     }
+    uploadFilterLevelItem.classList.remove('invisible');
   }
 })();

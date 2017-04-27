@@ -1,9 +1,8 @@
-
 'use strict';
 
 window.load = (function () {
 
-  return function (url, onLoad, onError) {
+  return function (url, loadHandler, errorHandler) {
 
     var xhr = new XMLHttpRequest();
     xhr.responseType = 'json';
@@ -11,22 +10,22 @@ window.load = (function () {
     xhr.addEventListener('load', function () {
       switch (xhr.status) {
         case 200:
-          onLoad(xhr.response);
+          loadHandler(xhr.response);
           break;
         case 404:
-          onError('Страница не найдена: ' + xhr.status);
+          errorHandler('Страница не найдена: ' + xhr.status);
           break;
         default:
-          onError('Неизвестный статус: ' + xhr.status + ' ' + xhr.statusText);
+          errorHandler('Неизвестный статус: ' + xhr.status + ' ' + xhr.statusText);
       }
 
     });
 
     xhr.addEventListener('error', function () {
-      onError('Произошла ошибка соединения');
+      errorHandler('Произошла ошибка соединения');
     });
     xhr.addEventListener('timeout', function () {
-      onError('Произошла ошибка соединения');
+      errorHandler('Произошла ошибка соединения');
     });
 
     xhr.timeout = 10000;

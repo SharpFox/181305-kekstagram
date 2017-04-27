@@ -1,8 +1,3 @@
-
-// ***********************************************
-// * ОТРИСОВЫВАЕТ МИНИАТЮРУ
-// ***********************************************
-
 'use strict';
 
 window.pictures = (function () {
@@ -50,7 +45,6 @@ window.pictures = (function () {
     appendNewChild(newPhotoFragment);
   }
 
-
   /**
    * Возвращает фрагмент, заполненный новой фотографией.
    *
@@ -78,5 +72,4 @@ window.pictures = (function () {
     'createNewFragment': createNewFragment,
     'appendNewChild': appendNewChild
   };
-
 })();
