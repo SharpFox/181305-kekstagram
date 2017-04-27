@@ -31,6 +31,7 @@
   var lastFilter;
   var setepScaleValueForFramingPhoto = 25;
 
+
   doDefaultSettingsOfFilter();
 
   uploadFileItem.addEventListener('click', openFramingPopupHandler);
@@ -39,6 +40,8 @@
   uploadFormCancelItem.addEventListener('click', closeFramingPopupHandler);
   uploadSubmitItem.addEventListener('click', closeFramingPopupHandler);
   uploadSubmitItem.addEventListener('keydown', closeFramingPopupHandler);
+
+  uploadFormDescriptionItem.addEventListener('keydown', checkFormDescriptionHandler);
 
   window.initializeScale(uploadResizeControlsItem, setepScaleValueForFramingPhoto, window.utils.SCALE_VALUES.MAX, changeScale);
   window.initializeFilters(uploadFilter, applyFilter);
@@ -140,7 +143,7 @@
       evt.preventDefault();
       closeFramingPopup();
     }
-    if (!uploadFormDescriptionItem.checkValidity()) {
+    if (!checkFormSubmit()) {
       return;
     }
     evt.preventDefault();
@@ -162,6 +165,17 @@
   }
 
   /**
+   * Контролирует ввод комментария.
+   *
+   * @param {object} evt
+   */
+  function checkFormDescriptionHandler(evt) {
+    if (evt.type === 'keydown') {
+      checkFormSubmit();
+    }
+  }
+
+  /**
    * Открывает форму кадрирования фотографии.
    *
    * @param {object} currentEvent
@@ -179,6 +193,7 @@
    * Закрывает форму кадрирования фотографии.
    */
   function closeFramingPopup() {
+
     doDefaultSettingsOfFilter();
     document.removeEventListener('keydown', closeFramingPopupPressEscHandler);
   }
@@ -190,6 +205,22 @@
    */
   function changeScale(currentScale) {
     filterImagePreviewItem.style.transform = 'scale(' + currentScale * 0.01 + ')';
+  }
+
+  /**
+   * Возвращает факт успешности проверки формы на валидность.
+   *
+   * @return {boolean}
+   */
+  function checkFormSubmit() {
+
+    if (uploadFormDescriptionItem.checkValidity()) {
+      uploadFormDescriptionItem.setAttribute('style', 'border: 3px green solid');
+      return true;
+    }
+
+    uploadFormDescriptionItem.setAttribute('style', 'border: 2px red solid');
+    return false;
   }
 
   /**
@@ -219,6 +250,8 @@
     uploadOverlayItem.classList.add('invisible');
     uploadFormDescriptionItem.value = '';
     uploadFilterNoneId.checked = true;
+
+    uploadFormDescriptionItem.setAttribute('style', 'border: 3px #333399 solid');
 
     if (typeof lastFilter !== 'undefined') {
       filterImagePreviewItem.classList.remove(lastFilter);

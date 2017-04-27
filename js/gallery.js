@@ -8,17 +8,23 @@
 (function () {
 
   var bodyItem = document.querySelector('body');
-  var pictureItem = bodyItem.querySelector('picture');
+  var filtersForm = bodyItem.querySelector('.filters');
+  var pictureItem = bodyItem.querySelector('.picture');
+  var picturesItem = bodyItem.querySelector('.pictures');
   var galleryOverlayItem = bodyItem.querySelector('.gallery-overlay');
   var galleryOverlayCloseItem = galleryOverlayItem.querySelector('.gallery-overlay-close');
 
-  var arrayOfPhotos;
+  var arrayOfPhotos = [];
+  var sortedArrayOfPhotos = [];
   var url = 'https://intensive-javascript-server-kjgvxfepjl.now.sh/kekstagram/data';
+  var lastTimeout;
 
   bodyItem.addEventListener('click', openPopupHandler);
   bodyItem.addEventListener('keydown', openPopupHandler);
   galleryOverlayCloseItem.addEventListener('click', closePopupHandler);
   galleryOverlayCloseItem.addEventListener('keydown', closePopupHandler);
+  filtersForm.addEventListener('click', sortPhotosHandler);
+  filtersForm.addEventListener('keydown', sortPhotosHandler);
 
   window.load(url, onLoad, onError);
 
@@ -30,6 +36,7 @@
   function onLoad(dataFromServer) {
     arrayOfPhotos = dataFromServer;
     window.pictures.createPhotos(arrayOfPhotos);
+    filtersForm.classList.remove('hidden');
   }
 
   /**
@@ -93,6 +100,118 @@
   }
 
   /**
+   * Выбирает тип сортировки согласно выбранному элементу.
+   *
+   * @param {object} evt
+   */
+  function sortPhotosHandler(evt) {
+    if (evt.keyCode !== window.utils.KEYS.ENTER && evt.type !== 'click') {
+      return;
+    }
+    if (evt.target.tagName !== 'INPUT') {
+      return;
+    }
+    debounce(function () {
+      sortPhotos(evt.target.value);
+    });
+  }
+
+  /**
+   * Сортирует фотографии согласно выбранного фильтра.
+   *
+   * @param {string} filter
+   */
+  function sortPhotos(filter) {
+
+    var newPhotoFragment = window.pictures.createNewFragment();
+    picturesItem.innerHTML = null;
+
+    switch (filter) {
+      case window.utils.sortFilters.new: {
+        sortPhotosByNew(arrayOfPhotos);
+        createSortPhotos(sortedArrayOfPhotos);
+        break;
+      }
+      case window.utils.sortFilters.discussed: {
+        sortImagesByComments(arrayOfPhotos);
+        createSortPhotos(sortedArrayOfPhotos);
+        break;
+      }
+      case window.utils.sortFilters.popular: {
+        createSortPhotos(arrayOfPhotos);
+        break;
+      }
+    }
+    window.pictures.appendNewChild(newPhotoFragment);
+  }
+
+  /**
+   * Возвращает 10 различных фотографий из массива, полученного с сервера.
+   *
+   * @param {object} currentArray
+   * @return {object}
+   */
+  function sortPhotosByNew(currentArray) {
+    var currentArrayCopy = currentArray.slice();
+    sortedArrayOfPhotos = [];
+
+    for (var i = 0; i < 10; i++) {
+      var randomIndex = window.utils.getRandomArrayIndex(currentArrayCopy);
+      sortedArrayOfPhotos.push(currentArrayCopy[randomIndex]);
+      currentArrayCopy.splice(randomIndex, 1);
+    }
+
+    return sortedArrayOfPhotos;
+  }
+
+  /**
+   * Сортирует полученный с сервера массив фотографий по количеству комментариев в порядке убывания.
+   *
+   * @param {object} currentArray
+   * @return {object}
+   */
+  function sortImagesByComments(currentArray) {
+
+    var currentArrayCopy = currentArray.slice();
+
+    currentArrayCopy.sort(function (a, b) {
+      return b.comments.length - a.comments.length;
+    });
+
+    sortedArrayOfPhotos = currentArrayCopy;
+    return sortedArrayOfPhotos;
+  }
+
+  /**
+   * Добавляет в разметку полученные с сервера отсортированные фотографии.
+   *
+   * @param {array} currentPhotosArray
+   */
+  function createSortPhotos(currentPhotosArray) {
+
+    var newPhotoFragment = window.pictures.createNewFragment();
+    var idNumber = 0;
+
+    currentPhotosArray.forEach(function (photo) {
+      window.pictures.createPhoto(photo, idNumber, newPhotoFragment);
+      idNumber += 1;
+    });
+    window.pictures.appendNewChild(newPhotoFragment);
+  }
+
+  /**
+   * Превратить несколько вызовов функции в течение определенного времени в один вызов.
+   *
+   * @param {function} func
+   */
+  function debounce(func) {
+    if (lastTimeout) {
+      window.clearTimeout(lastTimeout);
+    }
+    lastTimeout = window.setTimeout(func, 500);
+  }
+
+  /**
    * Показывает увеличенное изображение, предварительно наполняя
    * его и удаляя класс 'invisible' у класса 'gallery-overlay'.
    *
@@ -102,11 +221,13 @@
 
     var photoId = getPhotoId(evt.target);
 
-    if (photoId === null || photoId < 0) {
+    if (photoId === null || photoId < 0 || typeof photoId === 'undefined') {
       return;
     }
 
-    window.preview.fillPhoto(arrayOfPhotos[photoId], galleryOverlayItem);
+    if (typeof arrayOfPhotos !== 'undefined') {
+      window.preview.fillPhoto(arrayOfPhotos[photoId], galleryOverlayItem);
+    }
     galleryOverlayItem.classList.remove('invisible');
     document.addEventListener('keydown', closePopupPressEscHandler);
 
