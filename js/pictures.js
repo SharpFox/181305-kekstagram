@@ -3,7 +3,8 @@
 window.pictures = (function () {
 
   var picturesItem = document.querySelector('.pictures');
-  var pictureTemplate = document.querySelector('#picture-template').content;
+  var pictureTemplateItem = document.querySelector('#picture-template');
+  var pictureItem = pictureTemplateItem.content.querySelector('.picture');
 
   /**
    * Добавляет нового ребенка в '.pictures'.
@@ -43,16 +44,16 @@ window.pictures = (function () {
    */
   function createPhoto(photo, idNumber, newPhotoFragment) {
 
-    var pictureTemplateItem = pictureTemplate.cloneNode(true);
+    var newPictureItem = pictureItem.cloneNode(true);
 
-    pictureTemplateItem.querySelector('.picture').setAttribute('tabindex', 0);
-    pictureTemplateItem.querySelector('.picture').setAttribute('data-photo-id', idNumber);
+    newPictureItem.setAttribute('tabindex', 0);
+    newPictureItem.setAttribute('data-photo-id', idNumber);
 
-    pictureTemplateItem.querySelector('img').src = photo.url;
-    pictureTemplateItem.querySelector('.picture-likes').textContent = photo.likes;
-    pictureTemplateItem.querySelector('.picture-comments').textContent = photo.comments.length;
+    newPictureItem.querySelector('img').src = photo.url;
+    newPictureItem.querySelector('.picture-likes').textContent = photo.likes;
+    newPictureItem.querySelector('.picture-comments').textContent = photo.comments.length;
 
-    newPhotoFragment.appendChild(pictureTemplateItem);
+    newPhotoFragment.appendChild(newPictureItem);
   }
 
   return {
