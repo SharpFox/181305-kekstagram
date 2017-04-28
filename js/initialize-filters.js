@@ -19,7 +19,8 @@ window.initializeFilters = (function () {
       return;
     }
 
-    if (!window.utils.isContainClass(evt.target, 'upload-filter-preview') && evt.target.tagName !== 'LABEL') {
+    if (!window.utils.isContainClass(evt.target, 'upload-filter-preview')
+      && evt.target.tagName !== 'LABEL') {
       return;
     }
 

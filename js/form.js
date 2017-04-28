@@ -24,7 +24,7 @@
 
   uploadFilterLevelItem.ondragstart = false;
   var lastFilter;
-  var setepScaleValueForFramingPhoto = 25;
+  var STEP_SCALE = 25;
 
 
   doDefaultSettingsOfFilter();
@@ -36,7 +36,7 @@
   uploadSubmitItem.addEventListener('click', closeFramingPopupHandler);
   uploadSubmitItem.addEventListener('keydown', closeFramingPopupHandler);
 
-  window.initializeScale(uploadResizeControlsItem, setepScaleValueForFramingPhoto, window.utils.SCALE_VALUES.MAX, changeScale);
+  window.initializeScale(uploadResizeControlsItem, STEP_SCALE, window.utils.SCALE_VALUES.MAX, changeScale);
   window.initializeFilters(uploadFilter, applyFilter);
 
   initializeFilters();
@@ -84,15 +84,20 @@
    */
   function applyCurrentFilterSelector(percentFilterValue) {
     switch (lastFilter) {
-      case window.utils.filters.chrome: filterImagePreviewItem.style.filter = 'grayscale(' + percentFilterValue / 100 + ')';
+      case window.utils.filters.chrome:
+        filterImagePreviewItem.style.filter = 'grayscale(' + percentFilterValue / 100 + ')';
         break;
-      case window.utils.filters.sepia: filterImagePreviewItem.style.filter = 'sepia(' + percentFilterValue / 100 + ')';
+      case window.utils.filters.sepia:
+        filterImagePreviewItem.style.filter = 'sepia(' + percentFilterValue / 100 + ')';
         break;
-      case window.utils.filters.marvin: filterImagePreviewItem.style.filter = 'invert(' + percentFilterValue + '%)';
+      case window.utils.filters.marvin:
+        filterImagePreviewItem.style.filter = 'invert(' + percentFilterValue + '%)';
         break;
-      case window.utils.filters.phobos: filterImagePreviewItem.style.filter = 'blur(' + (percentFilterValue / 100) * 3 + 'px)';
+      case window.utils.filters.phobos:
+        filterImagePreviewItem.style.filter = 'blur(' + (percentFilterValue / 100) * 3 + 'px)';
         break;
-      case window.utils.filters.heat: filterImagePreviewItem.style.filter = 'brightness(' + (percentFilterValue / 100) * 3 + ')';
+      case window.utils.filters.heat:
+        filterImagePreviewItem.style.filter = 'brightness(' + (percentFilterValue / 100) * 3 + ')';
     }
   }
 
@@ -184,7 +189,7 @@
    * @param {object} currentEvent
    */
   function openFramingPopup(currentEvent) {
-    if (typeof lastFilter === 'undefined' || lastFilter === window.utils.filters.none) {
+    if (window.utils.isUndefined(lastFilter) || lastFilter === window.utils.filters.none) {
       uploadFilterLevelItem.classList.add('invisible');
     }
     uploadOverlayItem.classList.remove('invisible');
@@ -215,21 +220,21 @@
    * Выставляет границу вокркуг рамкм зеленого цвета.
    */
   function setGreenFrameForDescription() {
-    uploadFormDescriptionItem.setAttribute('style', 'border: 3px green solid');
+    uploadFormDescriptionItem.style.border = '3px green solid';
   }
 
   /**
    * Выставляет границу вокркуг рамкм красного цвета.
    */
   function setRedFrameForDescription() {
-    uploadFormDescriptionItem.setAttribute('style', 'border: 2px red solid');
+    uploadFormDescriptionItem.style.border = '3px red solid';
   }
 
   /**
    * Выставляет границу вокркуг рамкм синеватого цвета (#333399).
    */
   function setBlueFrameForDescription() {
-    uploadFormDescriptionItem.setAttribute('style', 'border: 3px #333399 solid');
+    uploadFormDescriptionItem.style.border = '3px #333399 solid';
   }
 
 
@@ -243,7 +248,7 @@
 
     lastFilter = newFilter;
 
-    if (typeof oldFilter !== 'undefined') {
+    if (!window.utils.isUndefined(oldFilter)) {
       filterImagePreviewItem.classList.remove(oldFilter);
     }
     filterImagePreviewItem.classList.add(newFilter);
@@ -264,7 +269,7 @@
 
     setBlueFrameForDescription();
 
-    if (typeof lastFilter !== 'undefined') {
+    if (!window.utils.isUndefined(lastFilter)) {
       filterImagePreviewItem.classList.remove(lastFilter);
     }
     uploadFilterLevelItem.classList.add('invisible');
@@ -281,7 +286,7 @@
     uploadFilterLevelPinItem.style.left = '100%';
     filterImagePreviewItem.style.filter = '';
 
-    window.initializeScale(uploadResizeControlsItem, setepScaleValueForFramingPhoto, window.utils.SCALE_VALUES.MAX, changeScale);
+    window.initializeScale(uploadResizeControlsItem, STEP_SCALE, window.utils.SCALE_VALUES.MAX, changeScale);
 
     if (lastFilter === window.utils.filters.none) {
       uploadFilterLevelItem.classList.add('invisible');

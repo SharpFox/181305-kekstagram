@@ -75,10 +75,20 @@ window.utils = (function () {
      * @param {function} func
      */
     'debounce': function (func) {
-      if (typeof lastTimeout !== 'undefined' || typeof lastTimeout === 'number') {
+      if (!this.isUndefined(lastTimeout) || typeof lastTimeout === 'number') {
         window.clearTimeout(lastTimeout);
       }
       lastTimeout = window.setTimeout(func, 500);
+    },
+
+     /**
+      * Возвращает результат равенства значения элемента с undefined.
+      *
+      * @param {object} element
+      * @return {boolean}
+      */
+    'isUndefined': function (element) {
+      return typeof element === 'undefined';
     }
   };
 })();

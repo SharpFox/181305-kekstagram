@@ -46,10 +46,10 @@ window.initializeScale = (function () {
    * @return {object}
    */
   function getCurrentOperationType(element) {
-    if (window.utils.isContainClass(element, scaleClassNames.dec) ? operationTypes.dec : false) {
+    if (window.utils.isContainClass(element, scaleClassNames.dec)) {
       return operationTypes.dec;
     }
-    if (window.utils.isContainClass(element, scaleClassNames.inc) ? operationTypes.inc : false) {
+    if (window.utils.isContainClass(element, scaleClassNames.inc)) {
       return operationTypes.inc;
     }
     return null;
@@ -66,7 +66,7 @@ window.initializeScale = (function () {
     initialScaleValue = getNewScaleValue(operationType);
 
     scaleFunction(initialScaleValue);
-    setupCurrentScaleValue(initialScaleValue);
+    setupScaleValue(initialScaleValue);
   }
 
   /**
@@ -91,7 +91,7 @@ window.initializeScale = (function () {
    *
    * @param {number} currentScaleValue
    */
-  function setupCurrentScaleValue(currentScaleValue) {
+  function setupScaleValue(currentScaleValue) {
     var element = getElementOfScaleCurrentValue(scaleClassNames.value);
     element.value = currentScaleValue + '%';
   }
@@ -103,7 +103,7 @@ window.initializeScale = (function () {
    * @return {object}
    */
   function getElementOfScaleCurrentValue(className) {
-    if (typeof elementOfScaleCurrentValue === 'undefined') {
+    if (window.utils.isUndefined(elementOfScaleCurrentValue)) {
       elementOfScaleCurrentValue = scaleElement.querySelector('.' + className);
     }
     return elementOfScaleCurrentValue;
@@ -123,6 +123,6 @@ window.initializeScale = (function () {
     scaleElement.addEventListener('click', scaleHandler);
     scaleElement.addEventListener('onkeydown', scaleHandler);
 
-    setupCurrentScaleValue(initialScaleValue);
+    setupScaleValue(initialScaleValue);
   };
 })();

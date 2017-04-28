@@ -76,7 +76,8 @@
     if (evt.keyCode !== window.utils.KEYS.ENTER && evt.type !== 'click') {
       return;
     }
-    if (!window.utils.isContainClass(evt.target, 'gallery-overlay-close') && evt.target.tagName !== 'SPAN') {
+    if (!window.utils.isContainClass(evt.target, 'gallery-overlay-close')
+      && evt.target.tagName !== 'SPAN') {
       return;
     }
     closePopup(evt);
@@ -118,24 +119,21 @@
    */
   function sortPhotos(filter) {
 
-    var newPhotoFragment = window.pictures.createNewFragment();
+    var newPhotoFragment = document.createDocumentFragment();
     picturesItem.innerHTML = null;
 
     switch (filter) {
-      case window.utils.sortFilters.new: {
+      case window.utils.sortFilters.new:
         sortPhotosByNew(arrayOfPhotos);
         createSortPhotos(sortedArrayOfPhotos);
         break;
-      }
-      case window.utils.sortFilters.discussed: {
+      case window.utils.sortFilters.discussed:
         sortImagesByComments(arrayOfPhotos);
         createSortPhotos(sortedArrayOfPhotos);
         break;
-      }
-      case window.utils.sortFilters.popular: {
+      case window.utils.sortFilters.popular:
         createSortPhotos(arrayOfPhotos);
         break;
-      }
     }
     window.pictures.appendNewChild(newPhotoFragment);
   }
@@ -184,12 +182,10 @@
    */
   function createSortPhotos(arrayOfElements) {
 
-    var newPhotoFragment = window.pictures.createNewFragment();
-    var idNumber = 0;
+    var newPhotoFragment = document.createDocumentFragment();
 
-    arrayOfElements.forEach(function (photo) {
-      window.pictures.createPhoto(photo, idNumber, newPhotoFragment);
-      idNumber += 1;
+    arrayOfElements.forEach(function (photo, i) {
+      window.pictures.createPhoto(photo, i, newPhotoFragment);
     });
     window.pictures.appendNewChild(newPhotoFragment);
   }
@@ -204,11 +200,11 @@
 
     var photoId = getPhotoId(evt.target);
 
-    if (photoId === null || photoId < 0 || typeof photoId === 'undefined') {
+    if (photoId === null || photoId < 0 || window.utils.isUndefined(photoId)) {
       return;
     }
 
-    if (typeof sortedArrayOfPhotos !== 'undefined') {
+    if (!window.utils.isUndefined(sortedArrayOfPhotos)) {
       window.preview.fillPhoto(sortedArrayOfPhotos[photoId], galleryOverlayItem);
     }
     galleryOverlayItem.classList.remove('invisible');

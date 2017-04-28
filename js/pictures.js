@@ -6,15 +6,6 @@ window.pictures = (function () {
   var pictureTemplate = document.querySelector('#picture-template').content;
 
   /**
-   * Возвращает новосозданный фрагмент.
-   *
-   * @return {object}
-   */
-  function createNewFragment() {
-    return document.createDocumentFragment();
-  }
-
-  /**
    * Добавляет нового ребенка в '.pictures'.
    *
    * @param {object} newPhotoFrigment
@@ -34,13 +25,11 @@ window.pictures = (function () {
       return;
     }
 
-    var newPhotoFragment = createNewFragment();
+    var newPhotoFragment = document.createDocumentFragment();
 
-    var length = arrayOfPhotos.length;
-
-    for (var i = 0; i < length; i++) {
-      createPhoto(arrayOfPhotos[i], i, newPhotoFragment);
-    }
+    arrayOfPhotos.forEach(function (photo, i) {
+      createPhoto(photo, i, newPhotoFragment);
+    });
 
     appendNewChild(newPhotoFragment);
   }
@@ -69,7 +58,6 @@ window.pictures = (function () {
   return {
     'createPhotos': createPhotos,
     'createPhoto': createPhoto,
-    'createNewFragment': createNewFragment,
     'appendNewChild': appendNewChild
   };
 })();
